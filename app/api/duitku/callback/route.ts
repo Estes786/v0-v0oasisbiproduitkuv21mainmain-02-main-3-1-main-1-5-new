@@ -6,12 +6,21 @@
  * This webhook is called by Duitku when payment status changes
  * 
  * IMPORTANT: This is for OUR subscription billing only
+ * 
+ * SECURITY: Signature verification using MD5 hash (Duitku standard)
+ * DATABASE: Automatic Supabase update on successful payment
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyDuitkuCallback, DUITKU_STATUS } from '@/lib/duitku'
+import { 
+  updateSubscriptionAfterPayment, 
+  getUserIdFromTransaction 
+} from '@/lib/subscription-service'
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  
   try {
     // Parse callback data from Duitku
     const body = await request.json()
@@ -25,19 +34,24 @@ export async function POST(request: NextRequest) {
       signature,
     } = body
 
-    console.log('Duitku Callback Received:', {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🔔 DUITKU CALLBACK RECEIVED')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('📦 Payload:', {
       merchantOrderId,
       amount,
       resultCode,
       reference,
+      merchantUserId,
       timestamp: new Date().toISOString(),
     })
 
-    // Verify signature to ensure request is from Duitku
+    // STEP 1: Verify signature (CRITICAL SECURITY CHECK)
     const isValid = verifyDuitkuCallback(merchantOrderId, amount, signature)
     
     if (!isValid) {
-      console.error('Invalid signature from Duitku callback')
+      console.error('❌ SIGNATURE VERIFICATION FAILED!')
+      console.error('Expected signature mismatch - possible fraud attempt')
       return NextResponse.json(
         { 
           success: false, 
@@ -46,57 +60,124 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+    
+    console.log('✅ Signature verified successfully')
 
-    // Process payment based on status
-    if (resultCode === DUITKU_STATUS.SUCCESS) {
-      console.log('✅ Payment SUCCESS:', merchantOrderId)
+    // STEP 2: Extract plan ID from merchant order ID
+    // Format: OASIS-{PLAN}-{TIMESTAMP}-{RANDOM}
+    const planMatch = merchantOrderId.match(/OASIS-([A-Z]+)-/i)
+    const planId = planMatch ? planMatch[1].toLowerCase() : 'starter'
+    
+    console.log('📋 Extracted Plan ID:', planId)
+
+    // STEP 3: Get user ID from transaction record
+    const userId = merchantUserId || await getUserIdFromTransaction(merchantOrderId)
+    
+    if (!userId) {
+      console.error('❌ User ID not found for order:', merchantOrderId)
+      // Still return 200 to avoid Duitku retry loop
+      return NextResponse.json({
+        success: false,
+        error: 'User ID not found',
+        message: 'Will process manually'
+      })
+    }
+    
+    console.log('👤 User ID:', userId)
+
+    // STEP 4: Process payment based on result code
+    if (resultCode === DUITKU_STATUS.SUCCESS || resultCode === '00') {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.log('💰 PAYMENT SUCCESS - Processing subscription activation')
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       
-      // TODO: Update database with payment success
-      // Example: Update user subscription status
-      // await updateUserSubscription(merchantUserId, {
-      //   status: 'active',
-      //   orderId: merchantOrderId,
-      //   amount: amount,
-      //   paidAt: new Date(),
-      // })
+      // Update subscription in Supabase
+      const result = await updateSubscriptionAfterPayment({
+        userId,
+        planId,
+        merchantOrderId,
+        amount: parseFloat(amount),
+        duitkuReference: reference,
+        status: 'active'
+      })
       
-      // TODO: Send confirmation email to customer
-      // await sendSubscriptionConfirmationEmail(merchantUserId)
+      if (result.success) {
+        console.log('✅ Subscription activated successfully!')
+        console.log('   - Team ID:', result.teamId)
+        console.log('   - Plan:', planId)
+        console.log('   - Amount:', amount, 'IDR')
+        console.log('   - Reference:', reference)
+      } else {
+        console.error('❌ Subscription activation failed:', result.error)
+      }
       
-    } else if (resultCode === DUITKU_STATUS.PENDING) {
+    } else if (resultCode === DUITKU_STATUS.PENDING || resultCode === '01') {
       console.log('⏳ Payment PENDING:', merchantOrderId)
       
-      // TODO: Update payment status to pending
-      // await updatePaymentStatus(merchantOrderId, 'pending')
+      await updateSubscriptionAfterPayment({
+        userId,
+        planId,
+        merchantOrderId,
+        amount: parseFloat(amount),
+        duitkuReference: reference,
+        status: 'pending'
+      })
       
-    } else if (resultCode === DUITKU_STATUS.EXPIRED) {
+    } else if (resultCode === DUITKU_STATUS.EXPIRED || resultCode === '02') {
       console.log('⏰ Payment EXPIRED:', merchantOrderId)
       
-      // TODO: Update payment status to expired
-      // await updatePaymentStatus(merchantOrderId, 'expired')
+      await updateSubscriptionAfterPayment({
+        userId,
+        planId,
+        merchantOrderId,
+        amount: parseFloat(amount),
+        duitkuReference: reference,
+        status: 'expired'
+      })
       
-    } else if (resultCode === DUITKU_STATUS.CANCELLED) {
+    } else if (resultCode === DUITKU_STATUS.CANCELLED || resultCode === '03') {
       console.log('❌ Payment CANCELLED:', merchantOrderId)
       
-      // TODO: Update payment status to cancelled
-      // await updatePaymentStatus(merchantOrderId, 'cancelled')
+      await updateSubscriptionAfterPayment({
+        userId,
+        planId,
+        merchantOrderId,
+        amount: parseFloat(amount),
+        duitkuReference: reference,
+        status: 'cancelled'
+      })
+    } else {
+      console.log('⚠️ Unknown result code:', resultCode)
     }
 
-    // Return success response to Duitku
+    const processingTime = Date.now() - startTime
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('✅ CALLBACK PROCESSED SUCCESSFULLY')
+    console.log(`⏱️  Processing time: ${processingTime}ms`)
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+
+    // IMPORTANT: Always return 200 to Duitku
     return NextResponse.json({
       success: true,
       message: 'Callback processed successfully',
+      processingTime: `${processingTime}ms`
     })
 
   } catch (error) {
-    console.error('Callback processing error:', error)
+    const processingTime = Date.now() - startTime
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('💥 CALLBACK PROCESSING ERROR')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error(error)
+    console.error(`⏱️  Failed after: ${processingTime}ms`)
     
-    // Still return 200 to Duitku to avoid retry loops
+    // IMPORTANT: Still return 200 to Duitku to avoid retry loops
     return NextResponse.json(
       { 
         success: false, 
         error: error instanceof Error ? error.message : 'Internal error',
-        message: 'Error logged, will investigate'
+        message: 'Error logged, will investigate manually',
+        processingTime: `${processingTime}ms`
       },
       { status: 200 }
     )

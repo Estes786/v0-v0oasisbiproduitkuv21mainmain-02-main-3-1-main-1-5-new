@@ -22,6 +22,11 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const { planId, email, phoneNumber, customerName, userId } = body
     
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🛒 CHECKOUT REQUEST RECEIVED')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('📦 Request data:', { planId, email, phoneNumber, customerName, userId })
+    
     if (!planId || !email || !phoneNumber || !customerName) {
       return NextResponse.json(
         { 
@@ -44,9 +49,11 @@ export async function POST(request: NextRequest) {
     }
 
     const plan = SUBSCRIPTION_PLANS[planId as keyof typeof SUBSCRIPTION_PLANS]
+    console.log('✅ Plan validated:', plan.name, '-', plan.price, 'IDR')
     
     // Generate unique order ID
     const merchantOrderId = generateMerchantOrderId(planId)
+    console.log('🔑 Generated Order ID:', merchantOrderId)
     
     // Create payment request
     const paymentRequest: DuitkuPaymentRequest = {
@@ -60,10 +67,13 @@ export async function POST(request: NextRequest) {
       userId: userId || undefined,
     }
 
+    console.log('📤 Calling Duitku API...')
+    
     // Call Duitku API
     const result = await createDuitkuPayment(paymentRequest)
     
     if (!result.success) {
+      console.error('❌ Duitku API call failed:', result.error)
       return NextResponse.json(
         { 
           success: false, 
@@ -72,6 +82,25 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    console.log('✅ Payment URL generated:', result.paymentUrl)
+    console.log('✅ Duitku Reference:', result.reference)
+    
+    // Create pending transaction in database (if userId provided)
+    if (userId) {
+      const { createPendingTransaction } = await import('@/lib/subscription-service')
+      await createPendingTransaction({
+        userId,
+        merchantOrderId,
+        amount: plan.price,
+        planId
+      })
+      console.log('✅ Pending transaction created in database')
+    }
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('✅ CHECKOUT COMPLETED SUCCESSFULLY')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
 
     // Return payment URL and reference
     return NextResponse.json({
@@ -86,7 +115,11 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Checkout error:', error)
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('💥 CHECKOUT ERROR')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error(error)
+    
     return NextResponse.json(
       { 
         success: false, 
