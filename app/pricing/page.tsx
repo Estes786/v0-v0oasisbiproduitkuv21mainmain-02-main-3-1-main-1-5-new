@@ -113,7 +113,12 @@ export default function PricingPage() {
     setLoading(planId)
 
     try {
-      // Call Duitku checkout API
+      console.log('🛒 Starting checkout for plan:', planId)
+      
+      // Call Duitku checkout API with timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s timeout
+      
       const response = await fetch('/api/duitku/checkout', {
         method: 'POST',
         headers: {
@@ -125,20 +130,45 @@ export default function PricingPage() {
           phoneNumber: customerInfo.phone,
           customerName: customerInfo.name,
         }),
+        signal: controller.signal,
       })
 
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const result = await response.json()
+      console.log('✅ Checkout response:', result)
 
       if (!result.success) {
         throw new Error(result.error || 'Checkout failed')
       }
 
+      if (!result.data?.paymentUrl) {
+        throw new Error('Payment URL not found in response')
+      }
+
+      console.log('🔗 Redirecting to:', result.data.paymentUrl)
+      
       // Redirect to Duitku payment page
       window.location.href = result.data.paymentUrl
 
     } catch (error) {
-      console.error('Checkout error:', error)
-      alert(error instanceof Error ? error.message : 'Terjadi kesalahan. Silakan coba lagi.')
+      console.error('❌ Checkout error:', error)
+      
+      let errorMessage = 'Terjadi kesalahan. Silakan coba lagi.'
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timeout. Silakan coba lagi atau periksa koneksi internet Anda.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      alert(errorMessage)
     } finally {
       setLoading(null)
     }
