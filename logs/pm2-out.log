@@ -91,3 +91,274 @@
 2025-12-04 10:39:32: 
 2025-12-04 10:39:32:  ✓ Starting...
 2025-12-04 10:39:35:  ✓ Ready in 2.7s
+2025-12-04 11:59:00: 
+2025-12-04 11:59:00: > oasis-bi-pro-duitku@2.1.0 dev
+2025-12-04 11:59:00: > next dev
+2025-12-04 11:59:00: 
+2025-12-04 11:59:01:    ▲ Next.js 15.5.6
+2025-12-04 11:59:01:    - Local:        http://localhost:3000
+2025-12-04 11:59:01:    - Network:      http://169.254.0.21:3000
+2025-12-04 11:59:01:    - Environments: .env.local
+2025-12-04 11:59:01: 
+2025-12-04 11:59:01:  ✓ Starting...
+2025-12-04 11:59:04:  ✓ Ready in 2.8s
+2025-12-04 11:59:05:  ○ Compiling /middleware ...
+2025-12-04 11:59:06:  ✓ Compiled /middleware in 1702ms (199 modules)
+2025-12-04 11:59:07:  ○ Compiling / ...
+2025-12-04 11:59:17:  ✓ Compiled / in 10.9s (821 modules)
+2025-12-04 12:00:48: ✅ Supabase environment variables validated
+2025-12-04 12:00:48:    URL: https://augohrpoogldvdvdaxxy.supabase.co
+2025-12-04 12:00:48:    Anon Key: ✅ Set
+2025-12-04 12:00:48:    Service Key: ✅ Set
+2025-12-04 12:00:48:  ✓ Compiled in 90.9s (345 modules)
+2025-12-04 12:00:55:  ○ Compiling /api/duitku/checkout ...
+2025-12-04 12:00:57:  ✓ Compiled /api/duitku/checkout in 1835ms (523 modules)
+2025-12-04 12:00:57: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:00:57: 🛒 CHECKOUT REQUEST RECEIVED
+2025-12-04 12:00:57: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:00:57: 📦 Request data: {
+2025-12-04 12:00:57:   planId: 'starter',
+2025-12-04 12:00:57:   email: 'test@example.com',
+2025-12-04 12:00:57:   phoneNumber: '08123456789',
+2025-12-04 12:00:57:   customerName: 'Test User',
+2025-12-04 12:00:57:   userId: 'test-user-123'
+2025-12-04 12:00:57: }
+2025-12-04 12:00:57: ✅ Plan validated: Starter Plan - 99000 IDR
+2025-12-04 12:00:57: 🔑 Generated Order ID: OASIS-STARTER-1764849657257-M1S0R7
+2025-12-04 12:00:57: 📤 Calling Duitku API...
+2025-12-04 12:00:57: 🔐 Signature Generation:
+2025-12-04 12:00:57:    Merchant Code: DS26335
+2025-12-04 12:00:57:    Timestamp: 1764849657259
+2025-12-04 12:00:57:    Signature: 1b026d2f7e1244823cbb26c5668099ea3447d2581fa2db612a0807e9bb81be0a
+2025-12-04 12:00:57: 📤 Sending request to: https://sandbox.duitku.com/webapi/api/merchant/createInvoice
+2025-12-04 12:00:57: 📤 Request headers: {
+2025-12-04 12:00:57:   'x-duitku-signature': '1b026d2f7e1244823cbb...',
+2025-12-04 12:00:57:   'x-duitku-timestamp': '1764849657259',
+2025-12-04 12:00:57:   'x-duitku-merchantcode': 'DS26335'
+2025-12-04 12:00:57: }
+2025-12-04 12:00:57: 📤 Request body: {
+2025-12-04 12:00:57:   paymentAmount: 99000,
+2025-12-04 12:00:57:   merchantOrderId: 'OASIS-STARTER-1764849657257-M1S0R7',
+2025-12-04 12:00:57:   productDetails: 'Starter Plan - OASIS BI PRO Subscription',
+2025-12-04 12:00:57:   email: 'test@example.com',
+2025-12-04 12:00:57:   phoneNumber: '08123456789',
+2025-12-04 12:00:57:   customerVaName: 'Test User',
+2025-12-04 12:00:57:   callbackUrl: 'https://www.oasis-bi-pro.web.id/api/duitku/callback',
+2025-12-04 12:00:57:   returnUrl: 'https://www.oasis-bi-pro.web.id/payment/success',
+2025-12-04 12:00:57:   expiryPeriod: 60
+2025-12-04 12:00:57: }
+2025-12-04 12:00:58: 📥 Duitku Response: { Message: 'An error has occurred.' }
+2025-12-04 12:00:58:  POST /api/duitku/checkout 500 in 3306ms
+2025-12-04 12:01:23:    Reload env: .env.local
+2025-12-04 12:01:24:  ✓ Compiled in 663ms (722 modules)
+2025-12-04 12:01:33:  ✓ Compiled in 295ms (191 modules)
+2025-12-04 12:01:39: [?25h
+2025-12-04 12:01:39: 
+2025-12-04 12:01:39: 
+2025-12-04 12:01:39: > oasis-bi-pro-duitku@2.1.0 dev
+2025-12-04 12:01:39: > next dev
+2025-12-04 12:01:39: 
+2025-12-04 12:01:41:    ▲ Next.js 15.5.6
+2025-12-04 12:01:41:    - Local:        http://localhost:3000
+2025-12-04 12:01:41:    - Network:      http://169.254.0.21:3000
+2025-12-04 12:01:41:    - Environments: .env.local
+2025-12-04 12:01:41: 
+2025-12-04 12:01:41:  ✓ Starting...
+2025-12-04 12:01:44:  ✓ Ready in 3.2s
+2025-12-04 12:02:02:  ○ Compiling /middleware ...
+2025-12-04 12:02:02:  ✓ Compiled /middleware in 647ms (199 modules)
+2025-12-04 12:02:03:  ○ Compiling /api/duitku/checkout ...
+2025-12-04 12:02:05:  ✓ Compiled /api/duitku/checkout in 2.8s (385 modules)
+2025-12-04 12:02:05: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:05: 🛒 CHECKOUT REQUEST RECEIVED
+2025-12-04 12:02:05: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:05: 📦 Request data: {
+2025-12-04 12:02:05:   planId: 'starter',
+2025-12-04 12:02:05:   email: 'test@example.com',
+2025-12-04 12:02:05:   phoneNumber: '08123456789',
+2025-12-04 12:02:05:   customerName: 'Test User',
+2025-12-04 12:02:05:   userId: undefined
+2025-12-04 12:02:05: }
+2025-12-04 12:02:05: ✅ Plan validated: Starter Plan - 99000 IDR
+2025-12-04 12:02:05: 🔑 Generated Order ID: OASIS-STARTER-1764849725738-4MFP7H
+2025-12-04 12:02:05: 📤 Calling Duitku API...
+2025-12-04 12:02:05: 🔐 Signature Generation:
+2025-12-04 12:02:05:    Merchant Code: DS26335
+2025-12-04 12:02:05:    Timestamp: 1764849725739
+2025-12-04 12:02:05:    Signature: a75900b167c042672cddbc80c59b8923990f4a5c3378ab3c30086d649d4026d2
+2025-12-04 12:02:05: 📤 Sending request to: https://api-sandbox.duitku.com/api/merchant/createInvoice
+2025-12-04 12:02:05: 📤 Request headers: {
+2025-12-04 12:02:05:   'x-duitku-signature': 'a75900b167c042672cdd...',
+2025-12-04 12:02:05:   'x-duitku-timestamp': '1764849725739',
+2025-12-04 12:02:05:   'x-duitku-merchantcode': 'DS26335'
+2025-12-04 12:02:05: }
+2025-12-04 12:02:05: 📤 Request body: {
+2025-12-04 12:02:05:   paymentAmount: 99000,
+2025-12-04 12:02:05:   merchantOrderId: 'OASIS-STARTER-1764849725738-4MFP7H',
+2025-12-04 12:02:05:   productDetails: 'Starter Plan - OASIS BI PRO Subscription',
+2025-12-04 12:02:05:   email: 'test@example.com',
+2025-12-04 12:02:05:   phoneNumber: '08123456789',
+2025-12-04 12:02:05:   customerVaName: 'Test User',
+2025-12-04 12:02:05:   callbackUrl: 'https://www.oasis-bi-pro.web.id/api/duitku/callback',
+2025-12-04 12:02:05:   returnUrl: 'https://www.oasis-bi-pro.web.id/payment/success',
+2025-12-04 12:02:05:   expiryPeriod: 60
+2025-12-04 12:02:05: }
+2025-12-04 12:02:07: 📥 Duitku Response: Unauthorized
+2025-12-04 12:02:08:  POST /api/duitku/checkout 500 in 5546ms
+2025-12-04 12:02:30:  ✓ Compiled in 500ms (191 modules)
+2025-12-04 12:02:37: [?25h
+2025-12-04 12:02:37: 
+2025-12-04 12:02:37: 
+2025-12-04 12:02:37: > oasis-bi-pro-duitku@2.1.0 dev
+2025-12-04 12:02:37: > next dev
+2025-12-04 12:02:37: 
+2025-12-04 12:02:38:    ▲ Next.js 15.5.6
+2025-12-04 12:02:38:    - Local:        http://localhost:3000
+2025-12-04 12:02:38:    - Network:      http://169.254.0.21:3000
+2025-12-04 12:02:38:    - Environments: .env.local
+2025-12-04 12:02:38: 
+2025-12-04 12:02:38:  ✓ Starting...
+2025-12-04 12:02:41:  ✓ Ready in 2.8s
+2025-12-04 12:02:52:  ○ Compiling /middleware ...
+2025-12-04 12:02:53:  ✓ Compiled /middleware in 612ms (199 modules)
+2025-12-04 12:02:53:  ○ Compiling /api/duitku/checkout ...
+2025-12-04 12:02:54:  ✓ Compiled /api/duitku/checkout in 1374ms (385 modules)
+2025-12-04 12:02:54: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:54: 🛒 CHECKOUT REQUEST RECEIVED
+2025-12-04 12:02:54: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:54: 📦 Request data: {
+2025-12-04 12:02:54:   planId: 'starter',
+2025-12-04 12:02:54:   email: 'test@example.com',
+2025-12-04 12:02:54:   phoneNumber: '08123456789',
+2025-12-04 12:02:54:   customerName: 'Test User',
+2025-12-04 12:02:54:   userId: undefined
+2025-12-04 12:02:54: }
+2025-12-04 12:02:54: ✅ Plan validated: Starter Plan - 99000 IDR
+2025-12-04 12:02:54: 🔑 Generated Order ID: OASIS-STARTER-1764849774993-IDODT3
+2025-12-04 12:02:54: 📤 Calling Duitku API...
+2025-12-04 12:02:54: 🔐 Signature Generation:
+2025-12-04 12:02:54:    Merchant Code: DS26335
+2025-12-04 12:02:55:  POST /api/duitku/checkout 500 in 1997ms
+2025-12-04 12:03:14:  ✓ Compiled in 475ms (191 modules)
+2025-12-04 12:03:23: [?25h
+2025-12-04 12:03:23: 
+2025-12-04 12:03:23: 
+2025-12-04 12:03:23: > oasis-bi-pro-duitku@2.1.0 dev
+2025-12-04 12:03:23: > next dev
+2025-12-04 12:03:23: 
+2025-12-04 12:03:24:    ▲ Next.js 15.5.6
+2025-12-04 12:03:24:    - Local:        http://localhost:3000
+2025-12-04 12:03:24:    - Network:      http://169.254.0.21:3000
+2025-12-04 12:03:24:    - Environments: .env.local
+2025-12-04 12:03:24: 
+2025-12-04 12:03:24:  ✓ Starting...
+2025-12-04 12:03:27:  ✓ Ready in 2.8s
+2025-12-04 12:03:39:  ○ Compiling /middleware ...
+2025-12-04 12:03:39:  ✓ Compiled /middleware in 669ms (199 modules)
+2025-12-04 12:03:40:  ○ Compiling /api/duitku/checkout ...
+2025-12-04 12:03:41:  ✓ Compiled /api/duitku/checkout in 1513ms (385 modules)
+2025-12-04 12:03:41: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:03:41: 🛒 CHECKOUT REQUEST RECEIVED
+2025-12-04 12:03:41: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:03:41: 📦 Request data: {
+2025-12-04 12:03:41:   planId: 'starter',
+2025-12-04 12:03:41:   email: 'test@example.com',
+2025-12-04 12:03:41:   phoneNumber: '08123456789',
+2025-12-04 12:03:41:   customerName: 'Test User',
+2025-12-04 12:03:41:   userId: undefined
+2025-12-04 12:03:41: }
+2025-12-04 12:03:41: ✅ Plan validated: Starter Plan - 99000 IDR
+2025-12-04 12:03:41: 🔑 Generated Order ID: OASIS-STARTER-1764849821308-CTVUDT
+2025-12-04 12:03:41: 📤 Calling Duitku API...
+2025-12-04 12:03:41: 🔐 Signature Generation:
+2025-12-04 12:03:41:    Merchant Code: DS26335
+2025-12-04 12:03:41:  POST /api/duitku/checkout 500 in 2032ms
+2025-12-04 12:03:50: [?25h
+2025-12-04 12:03:50: 
+2025-12-04 12:03:51: 
+2025-12-04 12:03:51: > oasis-bi-pro-duitku@2.1.0 dev
+2025-12-04 12:03:51: > next dev
+2025-12-04 12:03:51: 
+2025-12-04 12:03:52:    ▲ Next.js 15.5.6
+2025-12-04 12:03:52:    - Local:        http://localhost:3000
+2025-12-04 12:03:52:    - Network:      http://169.254.0.21:3000
+2025-12-04 12:03:52:    - Environments: .env.local
+2025-12-04 12:03:52: 
+2025-12-04 12:03:52:  ✓ Starting...
+2025-12-04 12:03:54:  ✓ Ready in 2.7s
+2025-12-04 12:04:20:  ○ Compiling /middleware ...
+2025-12-04 12:04:20:  ✓ Compiled /middleware in 693ms (199 modules)
+2025-12-04 12:04:21:  ○ Compiling /api/duitku/checkout ...
+2025-12-04 12:04:22:  ✓ Compiled /api/duitku/checkout in 1332ms (385 modules)
+2025-12-04 12:04:22: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:04:22: 🛒 CHECKOUT REQUEST RECEIVED
+2025-12-04 12:04:22: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:04:22: 📦 Request data: {
+2025-12-04 12:04:22:   planId: 'starter',
+2025-12-04 12:04:22:   email: 'test@example.com',
+2025-12-04 12:04:22:   phoneNumber: '08123456789',
+2025-12-04 12:04:22:   customerName: 'Test User',
+2025-12-04 12:04:22:   userId: undefined
+2025-12-04 12:04:22: }
+2025-12-04 12:04:22: ✅ Plan validated: Starter Plan - 99000 IDR
+2025-12-04 12:04:22: 🔑 Generated Order ID: OASIS-STARTER-1764849862322-6HZHVS
+2025-12-04 12:04:22: 📤 Calling Duitku API...
+2025-12-04 12:04:22: 🔐 Signature Generation:
+2025-12-04 12:04:22:    Merchant Code: DS26335
+2025-12-04 12:04:22:  POST /api/duitku/checkout 500 in 1875ms
+2025-12-04 12:04:47:  ✓ Compiled in 317ms (191 modules)
+2025-12-04 12:04:55: [?25h
+2025-12-04 12:04:55: 
+2025-12-04 12:04:55: 
+2025-12-04 12:04:55: > oasis-bi-pro-duitku@2.1.0 dev
+2025-12-04 12:04:55: > next dev
+2025-12-04 12:04:55: 
+2025-12-04 12:04:56:    ▲ Next.js 15.5.6
+2025-12-04 12:04:56:    - Local:        http://localhost:3000
+2025-12-04 12:04:56:    - Network:      http://169.254.0.21:3000
+2025-12-04 12:04:56:    - Environments: .env.local
+2025-12-04 12:04:56: 
+2025-12-04 12:04:56:  ✓ Starting...
+2025-12-04 12:04:59:  ✓ Ready in 2.9s
+2025-12-04 12:05:11:  ○ Compiling /middleware ...
+2025-12-04 12:05:11:  ✓ Compiled /middleware in 682ms (199 modules)
+2025-12-04 12:05:12:  ○ Compiling /api/duitku/checkout ...
+2025-12-04 12:05:12:  ✓ Compiled /api/duitku/checkout in 1459ms (385 modules)
+2025-12-04 12:05:13: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:05:13: 🛒 CHECKOUT REQUEST RECEIVED
+2025-12-04 12:05:13: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:05:13: 📦 Request data: {
+2025-12-04 12:05:13:   planId: 'starter',
+2025-12-04 12:05:13:   email: 'test@example.com',
+2025-12-04 12:05:13:   phoneNumber: '08123456789',
+2025-12-04 12:05:13:   customerName: 'Test User',
+2025-12-04 12:05:13:   userId: undefined
+2025-12-04 12:05:13: }
+2025-12-04 12:05:13: ✅ Plan validated: Starter Plan - 99000 IDR
+2025-12-04 12:05:13: 🔑 Generated Order ID: OASIS-STARTER-1764849913258-7EKH8R
+2025-12-04 12:05:13: 📤 Calling Duitku API...
+2025-12-04 12:05:13: 🔐 Signature Generation:
+2025-12-04 12:05:13:    Merchant Code: DS26335
+2025-12-04 12:05:13:    API Key: 78cb96d8cb...
+2025-12-04 12:05:13:    Timestamp: 1764849913259
+2025-12-04 12:05:13:    Signature String: DS26335-1764849913259-78cb96d8cb9ea9dc40d1c77068a659f6
+2025-12-04 12:05:13:    Signature (SHA256): e80192d172a08a6f2685c1a4895a4a121863bb2f4d627ea95fb9b3d3b0822f30
+2025-12-04 12:05:13: 📤 Sending request to: https://api-sandbox.duitku.com/api/merchant/createInvoice
+2025-12-04 12:05:13: 📤 Request headers: {
+2025-12-04 12:05:13:   'x-duitku-signature': 'e80192d172a08a6f2685...',
+2025-12-04 12:05:13:   'x-duitku-timestamp': '1764849913259',
+2025-12-04 12:05:13:   'x-duitku-merchantcode': 'DS26335'
+2025-12-04 12:05:13: }
+2025-12-04 12:05:13: 📤 Request body: {
+2025-12-04 12:05:13:   paymentAmount: 99000,
+2025-12-04 12:05:13:   merchantOrderId: 'OASIS-STARTER-1764849913258-7EKH8R',
+2025-12-04 12:05:13:   productDetails: 'Starter Plan - OASIS BI PRO Subscription',
+2025-12-04 12:05:13:   email: 'test@example.com',
+2025-12-04 12:05:13:   phoneNumber: '08123456789',
+2025-12-04 12:05:13:   customerVaName: 'Test User',
+2025-12-04 12:05:13:   callbackUrl: 'https://www.oasis-bi-pro.web.id/api/duitku/callback',
+2025-12-04 12:05:13:   returnUrl: 'https://www.oasis-bi-pro.web.id/payment/success',
+2025-12-04 12:05:13:   expiryPeriod: 60
+2025-12-04 12:05:13: }
+2025-12-04 12:05:14: 📥 Duitku Response: Unauthorized
+2025-12-04 12:05:14:  POST /api/duitku/checkout 500 in 2960ms

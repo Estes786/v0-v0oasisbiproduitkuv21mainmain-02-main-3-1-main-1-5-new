@@ -14,7 +14,7 @@ export const DUITKU_CONFIG = {
   merchantCode: process.env.NEXT_PUBLIC_DUITKU_MERCHANT_CODE || 'DS26335',
   apiKey: process.env.DUITKU_API_KEY || '78cb96d8cb9ea9dc40d1c77068a659f6',
   environment: process.env.NEXT_PUBLIC_DUITKU_ENV || 'sandbox',
-  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://sandbox.duitku.com/webapi/api/merchant',
+  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://api-sandbox.duitku.com/api/merchant',
   returnUrl: process.env.NEXT_PUBLIC_DUITKU_RETURN_URL || 'https://www.oasis-bi-pro.web.id/payment/success',
   callbackUrl: process.env.NEXT_PUBLIC_DUITKU_CALLBACK_URL || 'https://www.oasis-bi-pro.web.id/api/duitku/callback',
 }
@@ -130,7 +130,7 @@ export interface DuitkuPaymentRequest {
 }
 
 export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
-  const { merchantCode, baseUrl, returnUrl, callbackUrl } = DUITKU_CONFIG
+  const { merchantCode, apiKey, baseUrl, returnUrl, callbackUrl } = DUITKU_CONFIG
   
   // CRITICAL: Generate timestamp in Jakarta timezone (milliseconds)
   const timestamp = Date.now().toString()
@@ -140,8 +140,10 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
   
   console.log('🔐 Signature Generation:')
   console.log('   Merchant Code:', merchantCode)
+  console.log('   API Key:', apiKey ? (apiKey.substring(0, 10) + '...') : '❌ MISSING')
   console.log('   Timestamp:', timestamp)
-  console.log('   Signature:', headerSignature)
+  console.log('   Signature String:', `${merchantCode}-${timestamp}-${apiKey}`)
+  console.log('   Signature (SHA256):', headerSignature)
   
   const requestBody = {
     paymentAmount: data.paymentAmount,

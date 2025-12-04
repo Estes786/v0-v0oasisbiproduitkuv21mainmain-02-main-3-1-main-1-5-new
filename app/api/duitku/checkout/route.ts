@@ -88,14 +88,42 @@ export async function POST(request: NextRequest) {
     
     // Create pending transaction in database (if userId provided)
     if (userId) {
-      const { createPendingTransaction } = await import('@/lib/subscription-service')
-      await createPendingTransaction({
-        userId,
-        merchantOrderId,
-        amount: plan.price,
-        planId
-      })
-      console.log('✅ Pending transaction created in database')
+      try {
+        console.log('🔄 Attempting to create pending transaction...')
+        console.log('🔍 Checking Supabase connection...')
+        
+        // Verify Supabase environment variables
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        
+        if (!supabaseUrl || !supabaseServiceKey) {
+          console.error('❌ CRITICAL: Missing Supabase credentials!')
+          console.error('   NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Missing')
+          console.error('   SUPABASE_SERVICE_ROLE_KEY:', supabaseServiceKey ? '✅ Set' : '❌ Missing')
+          throw new Error('Missing Supabase environment variables')
+        }
+        
+        console.log('✅ Supabase credentials verified')
+        
+        const { createPendingTransaction } = await import('@/lib/subscription-service')
+        await createPendingTransaction({
+          userId,
+          merchantOrderId,
+          amount: plan.price,
+          planId
+        })
+        console.log('✅ Pending transaction created in database')
+      } catch (dbError) {
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('⚠️ DATABASE ERROR (NON-BLOCKING)')
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        console.error('   Error:', dbError)
+        console.error('   Context: Failed to create pending transaction')
+        console.error('   Impact: Payment will proceed, but transaction not logged')
+        console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        // Don't fail the checkout - just log the error
+        // Payment URL is already generated, so customer can proceed
+      }
     }
     
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')

@@ -1,1 +1,158 @@
 2025-12-04 10:32:49: <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (128kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+2025-12-04 11:59:07: <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (128kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+2025-12-04 12:00:58: ❌ Duitku API Error Response: { Message: 'An error has occurred.' }
+2025-12-04 12:00:58: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:00:58: 💥 DUITKU PAYMENT CREATION ERROR
+2025-12-04 12:00:58: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:00:58: Error details: Error: Duitku API Error (500): Internal Server Error
+2025-12-04 12:00:58:     at createDuitkuPayment (lib/duitku.ts:187:13)
+2025-12-04 12:00:58:     at async POST (app/api/duitku/checkout/route.ts:73:20)
+2025-12-04 12:00:58:   185 |     if (!response.ok) {
+2025-12-04 12:00:58:   186 |       console.error('❌ Duitku API Error Response:', result)
+2025-12-04 12:00:58: > 187 |       throw new Error(`Duitku API Error (${response.status}): ${result.message || result.statusMessage || response.statusText}`)
+2025-12-04 12:00:58:       |             ^
+2025-12-04 12:00:58:   188 |     }
+2025-12-04 12:00:58:   189 |     
+2025-12-04 12:00:58:   190 |     // Check if response has expected fields
+2025-12-04 12:00:58: Message: Duitku API Error (500): Internal Server Error
+2025-12-04 12:00:58: Stack: Error: Duitku API Error (500): Internal Server Error
+2025-12-04 12:00:58:     at createDuitkuPayment (webpack-internal:///(rsc)/./lib/duitku.ts:155:19)
+2025-12-04 12:00:58:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-12-04 12:00:58:     at async POST (webpack-internal:///(rsc)/./app/api/duitku/checkout/route.ts:67:24)
+2025-12-04 12:00:58:     at async AppRouteRouteModule.do (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+2025-12-04 12:00:58:     at async AppRouteRouteModule.handle (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+2025-12-04 12:00:58:     at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+2025-12-04 12:00:58:     at async AppRouteRouteModule.handleResponse (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+2025-12-04 12:00:58:     at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+2025-12-04 12:00:58:     at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+2025-12-04 12:00:58:     at async DevServer.renderToResponseWithComponentsImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1422:9)
+2025-12-04 12:00:58:     at async DevServer.renderPageComponent (/home/user/webapp/node_modules/next/dist/server/base-server.js:1474:24)
+2025-12-04 12:00:58:     at async DevServer.renderToResponseImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1514:32)
+2025-12-04 12:00:58:     at async DevServer.pipeImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1025:25)
+2025-12-04 12:00:58:     at async NextNodeServer.handleCatchallRenderRequest (/home/user/webapp/node_modules/next/dist/server/next-server.js:393:17)
+2025-12-04 12:00:58:     at async DevServer.handleRequestImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:916:17)
+2025-12-04 12:00:58:     at async /home/user/webapp/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+2025-12-04 12:00:58:     at async Span.traceAsyncFn (/home/user/webapp/node_modules/next/dist/trace/trace.js:157:20)
+2025-12-04 12:00:58:     at async DevServer.handleRequest (/home/user/webapp/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+2025-12-04 12:00:58:     at async invokeRender (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:240:21)
+2025-12-04 12:00:58:     at async handleRequest (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:437:24)
+2025-12-04 12:00:58:     at async requestHandlerImpl (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:485:13)
+2025-12-04 12:00:58:     at async Server.requestListener (/home/user/webapp/node_modules/next/dist/server/lib/start-server.js:226:13)
+2025-12-04 12:00:58: ❌ Duitku API call failed: Duitku API Error (500): Internal Server Error
+2025-12-04 12:02:07: ❌ Duitku API Error Response: Unauthorized
+2025-12-04 12:02:07: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:07: 💥 DUITKU PAYMENT CREATION ERROR
+2025-12-04 12:02:07: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:08: Error details: Error: Duitku API Error (401): Unauthorized
+2025-12-04 12:02:08:     at createDuitkuPayment (lib/duitku.ts:187:13)
+2025-12-04 12:02:08:     at async POST (app/api/duitku/checkout/route.ts:73:20)
+2025-12-04 12:02:08:   185 |     if (!response.ok) {
+2025-12-04 12:02:08:   186 |       console.error('❌ Duitku API Error Response:', result)
+2025-12-04 12:02:08: > 187 |       throw new Error(`Duitku API Error (${response.status}): ${result.message || result.statusMessage || response.statusText}`)
+2025-12-04 12:02:08:       |             ^
+2025-12-04 12:02:08:   188 |     }
+2025-12-04 12:02:08:   189 |     
+2025-12-04 12:02:08:   190 |     // Check if response has expected fields
+2025-12-04 12:02:08: Message: Duitku API Error (401): Unauthorized
+2025-12-04 12:02:08: Stack: Error: Duitku API Error (401): Unauthorized
+2025-12-04 12:02:08:     at createDuitkuPayment (webpack-internal:///(rsc)/./lib/duitku.ts:155:19)
+2025-12-04 12:02:08:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-12-04 12:02:08:     at async POST (webpack-internal:///(rsc)/./app/api/duitku/checkout/route.ts:67:24)
+2025-12-04 12:02:08:     at async AppRouteRouteModule.do (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+2025-12-04 12:02:08:     at async AppRouteRouteModule.handle (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+2025-12-04 12:02:08:     at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+2025-12-04 12:02:08:     at async AppRouteRouteModule.handleResponse (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+2025-12-04 12:02:08:     at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+2025-12-04 12:02:08:     at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+2025-12-04 12:02:08:     at async DevServer.renderToResponseWithComponentsImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1422:9)
+2025-12-04 12:02:08:     at async DevServer.renderPageComponent (/home/user/webapp/node_modules/next/dist/server/base-server.js:1474:24)
+2025-12-04 12:02:08:     at async DevServer.renderToResponseImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1514:32)
+2025-12-04 12:02:08:     at async DevServer.pipeImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1025:25)
+2025-12-04 12:02:08:     at async NextNodeServer.handleCatchallRenderRequest (/home/user/webapp/node_modules/next/dist/server/next-server.js:393:17)
+2025-12-04 12:02:08:     at async DevServer.handleRequestImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:916:17)
+2025-12-04 12:02:08:     at async /home/user/webapp/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+2025-12-04 12:02:08:     at async Span.traceAsyncFn (/home/user/webapp/node_modules/next/dist/trace/trace.js:157:20)
+2025-12-04 12:02:08:     at async DevServer.handleRequest (/home/user/webapp/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+2025-12-04 12:02:08:     at async invokeRender (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:240:21)
+2025-12-04 12:02:08:     at async handleRequest (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:437:24)
+2025-12-04 12:02:08:     at async requestHandlerImpl (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:485:13)
+2025-12-04 12:02:08:     at async Server.requestListener (/home/user/webapp/node_modules/next/dist/server/lib/start-server.js:226:13)
+2025-12-04 12:02:08: ❌ Duitku API call failed: Duitku API Error (401): Unauthorized
+2025-12-04 12:02:54: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:54: 💥 CHECKOUT ERROR
+2025-12-04 12:02:54: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:02:55: ReferenceError: apiKey is not defined
+2025-12-04 12:02:55:     at createDuitkuPayment (lib/duitku.ts:143:30)
+2025-12-04 12:02:55:     at POST (app/api/duitku/checkout/route.ts:73:45)
+2025-12-04 12:02:55:   141 |   console.log('🔐 Signature Generation:')
+2025-12-04 12:02:55:   142 |   console.log('   Merchant Code:', merchantCode)
+2025-12-04 12:02:55: > 143 |   console.log('   API Key:', apiKey.substring(0, 10) + '...')
+2025-12-04 12:02:55:       |                              ^
+2025-12-04 12:02:55:   144 |   console.log('   Timestamp:', timestamp)
+2025-12-04 12:02:55:   145 |   console.log('   Signature String:', `${merchantCode}-${timestamp}-${apiKey}`)
+2025-12-04 12:02:55:   146 |   console.log('   Signature (SHA256):', headerSignature)
+2025-12-04 12:03:41: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:03:41: 💥 CHECKOUT ERROR
+2025-12-04 12:03:41: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:03:41: ReferenceError: apiKey is not defined
+2025-12-04 12:03:41:     at createDuitkuPayment (lib/duitku.ts:143:30)
+2025-12-04 12:03:41:     at POST (app/api/duitku/checkout/route.ts:73:45)
+2025-12-04 12:03:41:   141 |   console.log('🔐 Signature Generation:')
+2025-12-04 12:03:41:   142 |   console.log('   Merchant Code:', merchantCode)
+2025-12-04 12:03:41: > 143 |   console.log('   API Key:', apiKey ? (apiKey.substring(0, 10) + '...') : '❌ MISSING')
+2025-12-04 12:03:41:       |                              ^
+2025-12-04 12:03:41:   144 |   console.log('   Timestamp:', timestamp)
+2025-12-04 12:03:41:   145 |   console.log('   Signature String:', `${merchantCode}-${timestamp}-${apiKey}`)
+2025-12-04 12:03:41:   146 |   console.log('   Signature (SHA256):', headerSignature)
+2025-12-04 12:04:22: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:04:22: 💥 CHECKOUT ERROR
+2025-12-04 12:04:22: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:04:22: ReferenceError: apiKey is not defined
+2025-12-04 12:04:22:     at createDuitkuPayment (lib/duitku.ts:143:30)
+2025-12-04 12:04:22:     at POST (app/api/duitku/checkout/route.ts:73:45)
+2025-12-04 12:04:22:   141 |   console.log('🔐 Signature Generation:')
+2025-12-04 12:04:22:   142 |   console.log('   Merchant Code:', merchantCode)
+2025-12-04 12:04:22: > 143 |   console.log('   API Key:', apiKey ? (apiKey.substring(0, 10) + '...') : '❌ MISSING')
+2025-12-04 12:04:22:       |                              ^
+2025-12-04 12:04:22:   144 |   console.log('   Timestamp:', timestamp)
+2025-12-04 12:04:22:   145 |   console.log('   Signature String:', `${merchantCode}-${timestamp}-${apiKey}`)
+2025-12-04 12:04:22:   146 |   console.log('   Signature (SHA256):', headerSignature)
+2025-12-04 12:05:14: ❌ Duitku API Error Response: Unauthorized
+2025-12-04 12:05:14: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:05:14: 💥 DUITKU PAYMENT CREATION ERROR
+2025-12-04 12:05:14: ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2025-12-04 12:05:14: Error details: Error: Duitku API Error (401): Unauthorized
+2025-12-04 12:05:14:     at createDuitkuPayment (lib/duitku.ts:189:13)
+2025-12-04 12:05:14:     at async POST (app/api/duitku/checkout/route.ts:73:20)
+2025-12-04 12:05:14:   187 |     if (!response.ok) {
+2025-12-04 12:05:14:   188 |       console.error('❌ Duitku API Error Response:', result)
+2025-12-04 12:05:14: > 189 |       throw new Error(`Duitku API Error (${response.status}): ${result.message || result.statusMessage || response.statusText}`)
+2025-12-04 12:05:14:       |             ^
+2025-12-04 12:05:14:   190 |     }
+2025-12-04 12:05:14:   191 |     
+2025-12-04 12:05:14:   192 |     // Check if response has expected fields
+2025-12-04 12:05:14: Message: Duitku API Error (401): Unauthorized
+2025-12-04 12:05:14: Stack: Error: Duitku API Error (401): Unauthorized
+2025-12-04 12:05:14:     at createDuitkuPayment (webpack-internal:///(rsc)/./lib/duitku.ts:157:19)
+2025-12-04 12:05:14:     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-12-04 12:05:14:     at async POST (webpack-internal:///(rsc)/./app/api/duitku/checkout/route.ts:67:24)
+2025-12-04 12:05:14:     at async AppRouteRouteModule.do (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:38696)
+2025-12-04 12:05:14:     at async AppRouteRouteModule.handle (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:5:45978)
+2025-12-04 12:05:14:     at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+2025-12-04 12:05:14:     at async AppRouteRouteModule.handleResponse (/home/user/webapp/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:1:187565)
+2025-12-04 12:05:14:     at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+2025-12-04 12:05:14:     at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fduitku%2Fcheckout%2Froute&page=%2Fapi%2Fduitku%2Fcheckout%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fduitku%2Fcheckout%2Froute.ts&appDir=%2Fhome%2Fuser%2Fwebapp%2Fapp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=%2Fhome%2Fuser%2Fwebapp&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+2025-12-04 12:05:14:     at async DevServer.renderToResponseWithComponentsImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1422:9)
+2025-12-04 12:05:14:     at async DevServer.renderPageComponent (/home/user/webapp/node_modules/next/dist/server/base-server.js:1474:24)
+2025-12-04 12:05:14:     at async DevServer.renderToResponseImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1514:32)
+2025-12-04 12:05:14:     at async DevServer.pipeImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:1025:25)
+2025-12-04 12:05:14:     at async NextNodeServer.handleCatchallRenderRequest (/home/user/webapp/node_modules/next/dist/server/next-server.js:393:17)
+2025-12-04 12:05:14:     at async DevServer.handleRequestImpl (/home/user/webapp/node_modules/next/dist/server/base-server.js:916:17)
+2025-12-04 12:05:14:     at async /home/user/webapp/node_modules/next/dist/server/dev/next-dev-server.js:399:20
+2025-12-04 12:05:14:     at async Span.traceAsyncFn (/home/user/webapp/node_modules/next/dist/trace/trace.js:157:20)
+2025-12-04 12:05:14:     at async DevServer.handleRequest (/home/user/webapp/node_modules/next/dist/server/dev/next-dev-server.js:395:24)
+2025-12-04 12:05:14:     at async invokeRender (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:240:21)
+2025-12-04 12:05:14:     at async handleRequest (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:437:24)
+2025-12-04 12:05:14:     at async requestHandlerImpl (/home/user/webapp/node_modules/next/dist/server/lib/router-server.js:485:13)
+2025-12-04 12:05:14:     at async Server.requestListener (/home/user/webapp/node_modules/next/dist/server/lib/start-server.js:226:13)
+2025-12-04 12:05:14: ❌ Duitku API call failed: Duitku API Error (401): Unauthorized
