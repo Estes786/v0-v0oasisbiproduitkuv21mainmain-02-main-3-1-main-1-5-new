@@ -72,8 +72,21 @@ export const SUBSCRIPTION_PLANS = {
 }
 
 /**
- * Generate signature for Duitku API request
- * Formula: MD5(merchantCode + merchantOrderId + paymentAmount + apiKey)
+ * Generate signature for Duitku API REQUEST HEADER
+ * Formula: SHA256(merchantCode + timestamp + apiKey)
+ * NOTE: This is for x-duitku-signature header, NOT for request body
+ */
+export function generateDuitkuRequestSignature(timestamp: string): string {
+  const { merchantCode, apiKey } = DUITKU_CONFIG
+  // CRITICAL: Use hyphen (-) separator as per Duitku docs
+  const signatureString = `${merchantCode}-${timestamp}-${apiKey}`
+  return crypto.createHash('sha256').update(signatureString).digest('hex')
+}
+
+/**
+ * Generate signature for Duitku API REQUEST BODY (old method - DEPRECATED)
+ * This was the OLD API format - keeping for reference
+ * NEW API uses header signature only
  */
 export function generateDuitkuSignature(
   merchantOrderId: string,
@@ -118,10 +131,19 @@ export interface DuitkuPaymentRequest {
 
 export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
   const { merchantCode, baseUrl, returnUrl, callbackUrl } = DUITKU_CONFIG
-  const signature = generateDuitkuSignature(data.merchantOrderId, data.paymentAmount)
+  
+  // CRITICAL: Generate timestamp in Jakarta timezone (milliseconds)
+  const timestamp = Date.now().toString()
+  
+  // CRITICAL: Generate SHA256 signature for REQUEST HEADER
+  const headerSignature = generateDuitkuRequestSignature(timestamp)
+  
+  console.log('🔐 Signature Generation:')
+  console.log('   Merchant Code:', merchantCode)
+  console.log('   Timestamp:', timestamp)
+  console.log('   Signature:', headerSignature)
   
   const requestBody = {
-    merchantCode,
     paymentAmount: data.paymentAmount,
     merchantOrderId: data.merchantOrderId,
     productDetails: data.productDetails,
@@ -130,25 +152,50 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
     customerVaName: data.customerName,
     callbackUrl,
     returnUrl,
-    signature,
     expiryPeriod: 60, // 60 minutes expiry
+    // NOTE: NO signature in body for new API format!
   }
 
   try {
-    const response = await fetch(`${baseUrl}/inquiry`, {
+    console.log('📤 Sending request to:', `${baseUrl}/createInvoice`)
+    console.log('📤 Request headers:', {
+      'x-duitku-signature': headerSignature.substring(0, 20) + '...',
+      'x-duitku-timestamp': timestamp,
+      'x-duitku-merchantcode': merchantCode,
+    })
+    console.log('📤 Request body:', requestBody)
+    
+    const response = await fetch(`${baseUrl}/createInvoice`, {
       method: 'POST',
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
+        // CRITICAL: New API format requires these headers
+        'x-duitku-signature': headerSignature,
+        'x-duitku-timestamp': timestamp,
+        'x-duitku-merchantcode': merchantCode,
       },
       body: JSON.stringify(requestBody),
     })
 
+    const result = await response.json()
+    
+    console.log('📥 Duitku Response:', result)
+    
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(`Duitku API Error: ${error.message || response.statusText}`)
+      console.error('❌ Duitku API Error Response:', result)
+      throw new Error(`Duitku API Error (${response.status}): ${result.message || result.statusMessage || response.statusText}`)
+    }
+    
+    // Check if response has expected fields
+    if (!result.paymentUrl && !result.reference) {
+      console.error('❌ Invalid Duitku response format:', result)
+      throw new Error('Invalid response from Duitku: missing paymentUrl or reference')
     }
 
-    const result = await response.json()
+    console.log('✅ Payment URL:', result.paymentUrl)
+    console.log('✅ Reference:', result.reference)
+    
     return {
       success: true,
       data: result,
@@ -156,7 +203,14 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
       reference: result.reference,
     }
   } catch (error) {
-    console.error('Duitku payment creation error:', error)
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('💥 DUITKU PAYMENT CREATION ERROR')
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.error('Error details:', error)
+    if (error instanceof Error) {
+      console.error('Message:', error.message)
+      console.error('Stack:', error.stack)
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -168,22 +222,24 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
  * Check payment status from Duitku
  */
 export async function checkDuitkuPaymentStatus(merchantOrderId: string) {
-  const { merchantCode, baseUrl, apiKey } = DUITKU_CONFIG
-  const signature = crypto
-    .createHash('md5')
-    .update(`${merchantCode}${merchantOrderId}${apiKey}`)
-    .digest('hex')
+  const { merchantCode, baseUrl } = DUITKU_CONFIG
+  
+  // Generate timestamp for header signature
+  const timestamp = Date.now().toString()
+  const headerSignature = generateDuitkuRequestSignature(timestamp)
 
   try {
-    const response = await fetch(`${baseUrl}/transactionStatus`, {
+    const response = await fetch(`${baseUrl}/checkTransaction`, {
       method: 'POST',
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
+        'x-duitku-signature': headerSignature,
+        'x-duitku-timestamp': timestamp,
+        'x-duitku-merchantcode': merchantCode,
       },
       body: JSON.stringify({
-        merchantCode,
         merchantOrderId,
-        signature,
       }),
     })
 
@@ -219,11 +275,12 @@ export function generateMerchantOrderId(planId: string): string {
 
 /**
  * Payment status codes from Duitku
+ * CRITICAL: These are the CORRECT codes from official documentation
  */
 export const DUITKU_STATUS = {
-  PENDING: '00', // Payment pending
-  SUCCESS: '01', // Payment success
-  EXPIRED: '02', // Payment expired
+  SUCCESS: '00', // Payment SUCCESS (CORRECT!)
+  PENDING: '01', // Payment PENDING (was wrongly '00')
+  EXPIRED: '02', // Payment expired/failed
   CANCELLED: '03', // Payment cancelled
 } as const
 

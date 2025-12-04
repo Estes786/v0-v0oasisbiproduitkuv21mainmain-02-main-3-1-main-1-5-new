@@ -86,9 +86,10 @@ export async function POST(request: NextRequest) {
     console.log('👤 User ID:', userId)
 
     // STEP 4: Process payment based on result code
+    // CRITICAL: '00' = SUCCESS (not PENDING!)
     if (resultCode === DUITKU_STATUS.SUCCESS || resultCode === '00') {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-      console.log('💰 PAYMENT SUCCESS - Processing subscription activation')
+      console.log('💰 PAYMENT SUCCESS (resultCode: 00) - Processing subscription activation')
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
       
       // Update subscription in Supabase
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       })
       
     } else if (resultCode === DUITKU_STATUS.EXPIRED || resultCode === '02') {
-      console.log('⏰ Payment EXPIRED:', merchantOrderId)
+      console.log('⏰ Payment EXPIRED/FAILED (resultCode: 02):', merchantOrderId)
       
       await updateSubscriptionAfterPayment({
         userId,
