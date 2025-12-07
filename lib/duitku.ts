@@ -180,9 +180,10 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
     console.log('📤 Request headers:', {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'x-duitku-signature': signature.substring(0, 20) + '...',
-      'x-duitku-timestamp': timestamp.toString(),
-      'x-duitku-merchantcode': merchantCode,
+      'X-Duitku-Signature': signature.substring(0, 20) + '...',
+      'X-Duitku-Timestamp': timestamp.toString(),
+      'X-Duitku-Merchantcode': merchantCode,
+      'X-Duitku-Client': 'sdk-node',
     })
     console.log('📤 Request body:', requestBody)
     
@@ -191,9 +192,10 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'x-duitku-signature': signature,
-        'x-duitku-timestamp': timestamp.toString(),
-        'x-duitku-merchantcode': merchantCode,
+        'X-Duitku-Signature': signature,
+        'X-Duitku-Timestamp': timestamp.toString(),
+        'X-Duitku-Merchantcode': merchantCode,
+        'X-Duitku-Client': 'sdk-node', // CRITICAL: Required by Duitku Pop API
       },
       body: JSON.stringify(requestBody),
     })
