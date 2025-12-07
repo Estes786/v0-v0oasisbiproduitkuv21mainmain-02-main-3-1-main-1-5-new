@@ -14,7 +14,7 @@ export const DUITKU_CONFIG = {
   merchantCode: process.env.NEXT_PUBLIC_DUITKU_MERCHANT_CODE || 'DS26557',
   apiKey: process.env.DUITKU_API_KEY || '68e1d64813c7f21a1ffc3839064ab6b3',
   environment: process.env.NEXT_PUBLIC_DUITKU_ENV || 'sandbox',
-  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://api-sandbox.duitku.com/api/merchant',
+  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://sandbox.duitku.com/webapi/api/merchant',
   returnUrl: process.env.NEXT_PUBLIC_DUITKU_RETURN_URL || 'https://www.oasis-bi-pro.web.id/payment/success',
   callbackUrl: process.env.NEXT_PUBLIC_DUITKU_CALLBACK_URL || 'https://www.oasis-bi-pro.web.id/api/duitku/callback',
 }
@@ -72,29 +72,30 @@ export const SUBSCRIPTION_PLANS = {
 }
 
 /**
- * Generate signature for Duitku API REQUEST HEADER
- * Formula: SHA256(merchantCode + timestamp + apiKey)
- * NOTE: This is for x-duitku-signature header, NOT for request body
+ * Generate signature for Duitku Transaction Request (v2/inquiry API)
+ * Formula: MD5(merchantCode + merchantOrderId + paymentAmount + apiKey)
+ * NOTE: NO separators, direct concatenation, used in REQUEST BODY
+ * Official Docs: https://docs.duitku.com/api/id/#permintaan-transaksi
  */
-export function generateDuitkuRequestSignature(timestamp: string): string {
+export function generateTransactionSignature(
+  merchantOrderId: string,
+  paymentAmount: number
+): string {
   const { merchantCode, apiKey } = DUITKU_CONFIG
-  // CRITICAL: Use hyphen (-) separator as per Duitku docs
-  const signatureString = `${merchantCode}-${timestamp}-${apiKey}`
-  return crypto.createHash('sha256').update(signatureString).digest('hex')
+  // CRITICAL: No separators, MD5 hash (NOT SHA256)
+  const signatureString = `${merchantCode}${merchantOrderId}${paymentAmount}${apiKey}`
+  return crypto.createHash('md5').update(signatureString).digest('hex')
 }
 
 /**
- * Generate signature for Duitku API REQUEST BODY (old method - DEPRECATED)
- * This was the OLD API format - keeping for reference
- * NEW API uses header signature only
+ * DEPRECATED: Old function name - use generateTransactionSignature instead
+ * Keeping for backward compatibility
  */
 export function generateDuitkuSignature(
   merchantOrderId: string,
   paymentAmount: number
 ): string {
-  const { merchantCode, apiKey } = DUITKU_CONFIG
-  const signatureString = `${merchantCode}${merchantOrderId}${paymentAmount}${apiKey}`
-  return crypto.createHash('md5').update(signatureString).digest('hex')
+  return generateTransactionSignature(merchantOrderId, paymentAmount)
 }
 
 /**
@@ -132,21 +133,24 @@ export interface DuitkuPaymentRequest {
 export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
   const { merchantCode, apiKey, baseUrl, returnUrl, callbackUrl } = DUITKU_CONFIG
   
-  // CRITICAL: Generate timestamp in Jakarta timezone (milliseconds)
-  const timestamp = Date.now().toString()
+  // CRITICAL: Generate MD5 signature for REQUEST BODY (v2/inquiry API)
+  const signature = generateTransactionSignature(
+    data.merchantOrderId,
+    data.paymentAmount
+  )
   
-  // CRITICAL: Generate SHA256 signature for REQUEST HEADER
-  const headerSignature = generateDuitkuRequestSignature(timestamp)
-  
-  console.log('🔐 Signature Generation:')
+  console.log('🔐 Signature Generation (MD5 - v2/inquiry API):')
   console.log('   Merchant Code:', merchantCode)
   console.log('   API Key:', apiKey ? (apiKey.substring(0, 10) + '...') : '❌ MISSING')
-  console.log('   Timestamp:', timestamp)
-  console.log('   Signature String:', `${merchantCode}-${timestamp}-${apiKey}`)
-  console.log('   Signature (SHA256):', headerSignature)
+  console.log('   Order ID:', data.merchantOrderId)
+  console.log('   Amount:', data.paymentAmount)
+  console.log('   Signature String:', `${merchantCode}${data.merchantOrderId}${data.paymentAmount}${apiKey}`)
+  console.log('   Signature (MD5):', signature)
   
   const requestBody = {
+    merchantCode,  // Include in body
     paymentAmount: data.paymentAmount,
+    paymentMethod: 'VC',  // VC = Credit Card (required)
     merchantOrderId: data.merchantOrderId,
     productDetails: data.productDetails,
     email: data.email,
@@ -154,28 +158,24 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
     customerVaName: data.customerName,
     callbackUrl,
     returnUrl,
+    signature,  // CRITICAL: Signature in body!
     expiryPeriod: 60, // 60 minutes expiry
-    // NOTE: NO signature in body for new API format!
   }
 
   try {
-    console.log('📤 Sending request to:', `${baseUrl}/createInvoice`)
+    console.log('📤 Sending request to:', `${baseUrl}/v2/inquiry`)
     console.log('📤 Request headers:', {
-      'x-duitku-signature': headerSignature.substring(0, 20) + '...',
-      'x-duitku-timestamp': timestamp,
-      'x-duitku-merchantcode': merchantCode,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
     })
     console.log('📤 Request body:', requestBody)
     
-    const response = await fetch(`${baseUrl}/createInvoice`, {
+    const response = await fetch(`${baseUrl}/v2/inquiry`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        // CRITICAL: New API format requires these headers
-        'x-duitku-signature': headerSignature,
-        'x-duitku-timestamp': timestamp,
-        'x-duitku-merchantcode': merchantCode,
+        // NO custom headers needed for v2/inquiry API
       },
       body: JSON.stringify(requestBody),
     })
@@ -224,24 +224,25 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
  * Check payment status from Duitku
  */
 export async function checkDuitkuPaymentStatus(merchantOrderId: string) {
-  const { merchantCode, baseUrl } = DUITKU_CONFIG
+  const { merchantCode, apiKey, baseUrl } = DUITKU_CONFIG
   
-  // Generate timestamp for header signature
-  const timestamp = Date.now().toString()
-  const headerSignature = generateDuitkuRequestSignature(timestamp)
+  // Generate MD5 signature for status check
+  const signature = crypto
+    .createHash('md5')
+    .update(`${merchantCode}${merchantOrderId}${apiKey}`)
+    .digest('hex')
 
   try {
-    const response = await fetch(`${baseUrl}/checkTransaction`, {
+    const response = await fetch(`${baseUrl}/transactionStatus`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'x-duitku-signature': headerSignature,
-        'x-duitku-timestamp': timestamp,
-        'x-duitku-merchantcode': merchantCode,
       },
       body: JSON.stringify({
+        merchantCode,
         merchantOrderId,
+        signature,
       }),
     })
 
