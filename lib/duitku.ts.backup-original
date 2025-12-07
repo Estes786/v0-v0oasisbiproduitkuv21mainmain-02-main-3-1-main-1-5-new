@@ -10,13 +10,11 @@
 import crypto from 'crypto'
 
 // Duitku Configuration (UPDATED WITH NEW CREDENTIALS - DS26557)
-// IMPORTANT: Using Duitku Pop API for payment method selection
 export const DUITKU_CONFIG = {
   merchantCode: process.env.NEXT_PUBLIC_DUITKU_MERCHANT_CODE || 'DS26557',
   apiKey: process.env.DUITKU_API_KEY || '68e1d64813c7f21a1ffc3839064ab6b3',
   environment: process.env.NEXT_PUBLIC_DUITKU_ENV || 'sandbox',
-  // Duitku Pop API base URL (different from v2/inquiry)
-  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://api-sandbox.duitku.com',
+  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://sandbox.duitku.com/webapi/api/merchant',
   returnUrl: process.env.NEXT_PUBLIC_DUITKU_RETURN_URL || 'https://www.oasis-bi-pro.web.id/payment/success',
   callbackUrl: process.env.NEXT_PUBLIC_DUITKU_CALLBACK_URL || 'https://www.oasis-bi-pro.web.id/api/duitku/callback',
 }
@@ -74,28 +72,17 @@ export const SUBSCRIPTION_PLANS = {
 }
 
 /**
- * Generate signature for Duitku Pop API (createInvoice)
- * Formula: SHA256(merchantCode + timestamp + apiKey)
- * NOTE: Used in REQUEST HEADERS (x-duitku-signature), timestamp in milliseconds
- * Official Docs: https://docs.duitku.com/pop/en/
- */
-export function generatePopSignature(timestamp: number): string {
-  const { merchantCode, apiKey } = DUITKU_CONFIG
-  // CRITICAL: SHA256 hash with timestamp (milliseconds)
-  const signatureString = `${merchantCode}${timestamp}${apiKey}`
-  return crypto.createHash('sha256').update(signatureString).digest('hex')
-}
-
-/**
- * DEPRECATED: Old v2/inquiry signature function - kept for reference
  * Generate signature for Duitku Transaction Request (v2/inquiry API)
  * Formula: MD5(merchantCode + merchantOrderId + paymentAmount + apiKey)
+ * NOTE: NO separators, direct concatenation, used in REQUEST BODY
+ * Official Docs: https://docs.duitku.com/api/id/#permintaan-transaksi
  */
 export function generateTransactionSignature(
   merchantOrderId: string,
   paymentAmount: number
 ): string {
   const { merchantCode, apiKey } = DUITKU_CONFIG
+  // CRITICAL: No separators, MD5 hash (NOT SHA256)
   const signatureString = `${merchantCode}${merchantOrderId}${paymentAmount}${apiKey}`
   return crypto.createHash('md5').update(signatureString).digest('hex')
 }
@@ -146,24 +133,26 @@ export interface DuitkuPaymentRequest {
 export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
   const { merchantCode, apiKey, baseUrl, returnUrl, callbackUrl } = DUITKU_CONFIG
   
-  // Generate timestamp in milliseconds (UNIX timestamp)
-  const timestamp = Date.now()
+  // CRITICAL: Generate MD5 signature for REQUEST BODY (v2/inquiry API)
+  const signature = generateTransactionSignature(
+    data.merchantOrderId,
+    data.paymentAmount
+  )
   
-  // CRITICAL: Generate SHA256 signature for HEADERS (Duitku Pop API)
-  const signature = generatePopSignature(timestamp)
-  
-  console.log('🔐 Signature Generation (SHA256 - Duitku Pop API):')
+  console.log('🔐 Signature Generation (MD5 - v2/inquiry API):')
   console.log('   Merchant Code:', merchantCode)
   console.log('   API Key:', apiKey ? (apiKey.substring(0, 10) + '...') : '❌ MISSING')
-  console.log('   Timestamp:', timestamp)
-  console.log('   Signature String:', `${merchantCode}${timestamp}${apiKey}`)
-  console.log('   Signature (SHA256):', signature)
+  console.log('   Order ID:', data.merchantOrderId)
+  console.log('   Amount:', data.paymentAmount)
+  console.log('   Signature String:', `${merchantCode}${data.merchantOrderId}${data.paymentAmount}${apiKey}`)
+  console.log('   Signature (MD5):', signature)
   
-  // Request body for Duitku Pop API (createInvoice)
-  // IMPORTANT: NO paymentMethod parameter - this allows ALL payment methods to be displayed
   const requestBody = {
+    merchantCode,  // Include in body
     paymentAmount: data.paymentAmount,
-    // paymentMethod: NOT INCLUDED - to show ALL payment methods
+    paymentMethod: 'VC',  // VC = Credit Card
+    // NOTE: To show ALL payment methods, need to switch to Duitku Pop API
+    // See PAYMENT_METHOD_FIX_FINDINGS.md for detailed solution
     merchantOrderId: data.merchantOrderId,
     productDetails: data.productDetails,
     email: data.email,
@@ -171,29 +160,24 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
     customerVaName: data.customerName,
     callbackUrl,
     returnUrl,
+    signature,  // CRITICAL: Signature in body!
     expiryPeriod: 60, // 60 minutes expiry
   }
 
   try {
-    const endpoint = `${baseUrl}/api/merchant/createInvoice`
-    console.log('📤 Sending request to:', endpoint)
+    console.log('📤 Sending request to:', `${baseUrl}/v2/inquiry`)
     console.log('📤 Request headers:', {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'x-duitku-signature': signature.substring(0, 20) + '...',
-      'x-duitku-timestamp': timestamp.toString(),
-      'x-duitku-merchantcode': merchantCode,
     })
     console.log('📤 Request body:', requestBody)
     
-    const response = await fetch(endpoint, {
+    const response = await fetch(`${baseUrl}/v2/inquiry`, {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'x-duitku-signature': signature,
-        'x-duitku-timestamp': timestamp.toString(),
-        'x-duitku-merchantcode': merchantCode,
+        // NO custom headers needed for v2/inquiry API
       },
       body: JSON.stringify(requestBody),
     })
@@ -215,8 +199,6 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
 
     console.log('✅ Payment URL:', result.paymentUrl)
     console.log('✅ Reference:', result.reference)
-    console.log('✅ Expected URL format: https://app-sandbox.duitku.com/redirect_checkout?reference=...')
-    console.log('✅ This URL will show ALL payment methods (VA, E-Wallet, Credit Card, QRIS, Retail)')
     
     return {
       success: true,
