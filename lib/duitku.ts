@@ -150,7 +150,9 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
   const requestBody = {
     merchantCode,  // Include in body
     paymentAmount: data.paymentAmount,
-    paymentMethod: 'VC',  // VC = Credit Card (required)
+    paymentMethod: 'VC',  // VC = Credit Card
+    // NOTE: To show ALL payment methods, need to switch to Duitku Pop API
+    // See PAYMENT_METHOD_FIX_FINDINGS.md for detailed solution
     merchantOrderId: data.merchantOrderId,
     productDetails: data.productDetails,
     email: data.email,
