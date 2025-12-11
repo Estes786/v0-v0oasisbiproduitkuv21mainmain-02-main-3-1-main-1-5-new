@@ -9,14 +9,16 @@
 
 import crypto from 'crypto'
 
-// Duitku Configuration (UPDATED WITH NEW CREDENTIALS - DS26557)
+// Duitku Configuration - PRODUCTION CREDENTIALS
 // IMPORTANT: Using Duitku Pop API for payment method selection
 export const DUITKU_CONFIG = {
-  merchantCode: process.env.NEXT_PUBLIC_DUITKU_MERCHANT_CODE || 'DS26557',
-  apiKey: process.env.DUITKU_API_KEY || '68e1d64813c7f21a1ffc3839064ab6b3',
-  environment: process.env.NEXT_PUBLIC_DUITKU_ENV || 'sandbox',
-  // Duitku Pop API base URL (different from v2/inquiry)
-  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://api-sandbox.duitku.com',
+  merchantCode: process.env.NEXT_PUBLIC_DUITKU_MERCHANT_CODE || 'D20919',
+  apiKey: process.env.DUITKU_API_KEY || '17d9d5e20fbf4763a44c41a1e95cb7cb',
+  environment: process.env.NEXT_PUBLIC_DUITKU_ENV || 'production',
+  // Duitku Pop API base URL - CRITICAL: Different URL format for Production vs Sandbox
+  // Production: https://api.duitku.com/webapi/v1/payment
+  // Sandbox: https://api-sandbox.duitku.com
+  baseUrl: process.env.NEXT_PUBLIC_DUITKU_API_URL || 'https://api.duitku.com/webapi/v1/payment',
   returnUrl: process.env.NEXT_PUBLIC_DUITKU_RETURN_URL || 'https://www.oasis-bi-pro.web.id/payment/success',
   callbackUrl: process.env.NEXT_PUBLIC_DUITKU_CALLBACK_URL || 'https://www.oasis-bi-pro.web.id/api/duitku/callback',
 }
