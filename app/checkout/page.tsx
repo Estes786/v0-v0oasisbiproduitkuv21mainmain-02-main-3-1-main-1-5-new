@@ -92,24 +92,43 @@ function CheckoutContent() {
 
     setLoading(true);
     try {
-      const response = await axios.post('/api/duitku/create-payment', {
-        planType: selectedPlan,
-        amount: plan.price,
+      // MIGRATION TO SUPABASE EDGE FUNCTIONS
+      // Using Edge Functions for better network reliability
+      const edgeFunctionUrl = process.env.NEXT_PUBLIC_DUITKU_CHECKOUT_URL || 
+                             'https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-checkout';
+      
+      console.log('🚀 Calling Supabase Edge Function:', edgeFunctionUrl);
+      
+      const response = await axios.post(edgeFunctionUrl, {
+        planId: selectedPlan,
+        email: formData.customerEmail,
+        phoneNumber: formData.customerPhone,
         customerName: formData.customerName,
-        customerEmail: formData.customerEmail,
-        customerPhone: formData.customerPhone,
-        paymentMethod: selectedPaymentMethod,
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        }
       });
 
-      if (response.data.success && response.data.paymentUrl) {
+      console.log('✅ Edge Function Response:', response.data);
+
+      if (response.data.success && response.data.data?.paymentUrl) {
+        console.log('🔗 Redirecting to:', response.data.data.paymentUrl);
         // Redirect to Duitku payment page
-        window.location.href = response.data.paymentUrl;
+        window.location.href = response.data.data.paymentUrl;
       } else {
+        console.error('❌ Payment creation failed:', response.data);
         alert('Gagal membuat pembayaran. Silakan coba lagi.');
       }
     } catch (error) {
-      console.error('Payment creation failed:', error);
-      alert('Terjadi kesalahan. Silakan coba lagi.');
+      console.error('💥 Payment creation error:', error);
+      if (axios.isAxiosError(error) && error.response) {
+        console.error('   Response:', error.response.data);
+        alert(`Terjadi kesalahan: ${error.response.data.error || 'Unknown error'}`);
+      } else {
+        alert('Terjadi kesalahan. Silakan coba lagi.');
+      }
     } finally {
       setLoading(false);
     }
