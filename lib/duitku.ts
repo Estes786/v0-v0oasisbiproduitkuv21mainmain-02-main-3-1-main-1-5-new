@@ -177,7 +177,10 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
   }
 
   try {
-    const endpoint = `${baseUrl}/api/merchant/createInvoice`
+    // CRITICAL FIX: Use createInvoice directly (NOT /api/merchant/createInvoice)
+    // baseUrl already contains: https://api.duitku.com/webapi/v1/payment
+    // So we only need to add: /createInvoice
+    const endpoint = `${baseUrl}/createInvoice`
     console.log('📤 Sending request to:', endpoint)
     console.log('📤 Request headers:', {
       'Accept': 'application/json',
