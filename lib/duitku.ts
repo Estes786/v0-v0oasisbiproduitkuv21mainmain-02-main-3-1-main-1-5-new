@@ -176,34 +176,41 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
     expiryPeriod: 60, // 60 minutes expiry
   }
 
-  try {
-    // CRITICAL FIX: Use createInvoice directly (NOT /api/merchant/createInvoice)
-    // baseUrl already contains: https://api.duitku.com/webapi/v1/payment
-    // So we only need to add: /createInvoice
-    const endpoint = `${baseUrl}/createInvoice`
-    console.log('📤 Sending request to:', endpoint)
-    console.log('📤 Request headers:', {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'X-Duitku-Signature': signature.substring(0, 20) + '...',
-      'X-Duitku-Timestamp': timestamp.toString(),
-      'X-Duitku-Merchantcode': merchantCode,
-      'X-Duitku-Client': 'sdk-node',
-    })
-    console.log('📤 Request body:', requestBody)
-    
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
+  // Retry mechanism for network errors
+  const MAX_RETRIES = 3
+  const RETRY_DELAY = 1000 // 1 second
+  
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      // CRITICAL FIX: Use createInvoice directly (NOT /api/merchant/createInvoice)
+      // baseUrl already contains: https://api.duitku.com/webapi/v1/payment
+      // So we only need to add: /createInvoice
+      const endpoint = `${baseUrl}/createInvoice`
+      console.log(`📤 Sending request to: ${endpoint} (Attempt ${attempt}/${MAX_RETRIES})`)
+      console.log('📤 Request headers:', {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'X-Duitku-Signature': signature,
+        'X-Duitku-Signature': signature.substring(0, 20) + '...',
         'X-Duitku-Timestamp': timestamp.toString(),
         'X-Duitku-Merchantcode': merchantCode,
-        'X-Duitku-Client': 'sdk-node', // CRITICAL: Required by Duitku Pop API
-      },
-      body: JSON.stringify(requestBody),
-    })
+        'X-Duitku-Client': 'sdk-node',
+      })
+      console.log('📤 Request body:', requestBody)
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-Duitku-Signature': signature,
+          'X-Duitku-Timestamp': timestamp.toString(),
+          'X-Duitku-Merchantcode': merchantCode,
+          'X-Duitku-Client': 'sdk-node', // CRITICAL: Required by Duitku Pop API
+        },
+        body: JSON.stringify(requestBody),
+        // Add timeout and signal for better error handling
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      })
 
     const result = await response.json()
     
@@ -225,25 +232,68 @@ export async function createDuitkuPayment(data: DuitkuPaymentRequest) {
     console.log('✅ Expected URL format: https://app-sandbox.duitku.com/redirect_checkout?reference=...')
     console.log('✅ This URL will show ALL payment methods (VA, E-Wallet, Credit Card, QRIS, Retail)')
     
-    return {
-      success: true,
-      data: result,
-      paymentUrl: result.paymentUrl,
-      reference: result.reference,
+      return {
+        success: true,
+        data: result,
+        paymentUrl: result.paymentUrl,
+        reference: result.reference,
+      }
+    } catch (error) {
+      // Check if this is a network error that we can retry
+      const isNetworkError = error instanceof Error && (
+        error.message.includes('ENOTFOUND') ||
+        error.message.includes('ETIMEDOUT') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('fetch failed')
+      )
+      
+      if (isNetworkError && attempt < MAX_RETRIES) {
+        console.warn(`⚠️ Network error on attempt ${attempt}/${MAX_RETRIES}, retrying in ${RETRY_DELAY}ms...`)
+        console.warn('   Error:', error instanceof Error ? error.message : String(error))
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+        continue // Retry
+      }
+      
+      // If we've exhausted retries or it's not a network error, throw
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error('💥 DUITKU PAYMENT CREATION ERROR')
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+      console.error(`   Attempt: ${attempt}/${MAX_RETRIES}`)
+      console.error('   Error details:', error)
+      if (error instanceof Error) {
+        console.error('   Message:', error.message)
+        console.error('   Stack:', error.stack)
+        
+        // Enhanced error message for DNS issues
+        if (error.message.includes('ENOTFOUND')) {
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.error('🔍 DNS RESOLUTION FAILED')
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+          console.error('   Hostname: api.duitku.com')
+          console.error('   Possible causes:')
+          console.error('   1. DNS server issues')
+          console.error('   2. Network firewall blocking')
+          console.error('   3. Incorrect domain name')
+          console.error('   4. Vercel/hosting environment network restrictions')
+          console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        }
+      }
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        attempt,
+        maxRetries: MAX_RETRIES,
+      }
     }
-  } catch (error) {
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('💥 DUITKU PAYMENT CREATION ERROR')
-    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.error('Error details:', error)
-    if (error instanceof Error) {
-      console.error('Message:', error.message)
-      console.error('Stack:', error.stack)
-    }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
+  }
+  
+  // This should never be reached, but TypeScript needs it
+  return {
+    success: false,
+    error: 'All retry attempts failed',
+    attempt: MAX_RETRIES,
+    maxRetries: MAX_RETRIES,
   }
 }
 
