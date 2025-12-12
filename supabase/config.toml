@@ -1,4 +1,5 @@
-# Supabase Configuration for OASIS BI PRO
+# Supabase Edge Functions Configuration for OASIS BI PRO
+# This configuration file is used for local development and deployment
 
 [api]
 enabled = true
@@ -9,6 +10,7 @@ max_rows = 1000
 
 [db]
 port = 54322
+shadow_port = 54320
 major_version = 15
 
 [studio]
@@ -30,6 +32,8 @@ enabled = true
 site_url = "https://www.oasis-bi-pro.web.id"
 additional_redirect_urls = ["http://localhost:3000"]
 jwt_expiry = 3600
+enable_refresh_token_rotation = true
+refresh_token_reuse_interval = 10
 enable_signup = true
 
 [auth.email]
@@ -37,9 +41,31 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
 
-# Edge Functions Configuration
+# ============================================================================
+# EDGE FUNCTIONS CONFIGURATION
+# ============================================================================
+
 [functions.duitku-checkout]
+# This function creates Duitku payment invoices
+# No JWT verification needed (public endpoint)
 verify_jwt = false
 
 [functions.duitku-callback]
+# This function receives payment notifications from Duitku
+# No JWT verification needed (external webhook)
 verify_jwt = false
+
+# ============================================================================
+# EDGE FUNCTIONS ENVIRONMENT
+# ============================================================================
+# Note: For production deployment, set these secrets using:
+# supabase secrets set KEY=VALUE
+#
+# Required secrets:
+# - DUITKU_MERCHANT_CODE
+# - DUITKU_API_KEY
+# - DUITKU_BASE_URL
+# - DUITKU_CALLBACK_URL
+# - DUITKU_RETURN_URL
+# - SUPABASE_URL
+# - SUPABASE_SERVICE_ROLE_KEY
