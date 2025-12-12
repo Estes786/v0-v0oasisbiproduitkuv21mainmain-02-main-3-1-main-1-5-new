@@ -14,7 +14,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 // ============================================================================
 const DUITKU_MERCHANT_CODE = Deno.env.get('DUITKU_MERCHANT_CODE') || 'D20919'
 const DUITKU_API_KEY = Deno.env.get('DUITKU_API_KEY') || '17d9d5e20fbf4763a44c41a1e95cb7cb'
-const DUITKU_BASE_URL = Deno.env.get('DUITKU_BASE_URL') || 'https://api.duitku.com/webapi/v1/payment'
+const DUITKU_BASE_URL = Deno.env.get('DUITKU_BASE_URL') || 'https://api-sandbox.duitku.com/webapi/v1/payment' // Changed from api.duitku.com to api-sandbox.duitku.com for testing/DNS issue
 const CALLBACK_URL = Deno.env.get('DUITKU_CALLBACK_URL') || 'https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback'
 const RETURN_URL = Deno.env.get('DUITKU_RETURN_URL') || 'https://www.oasis-bi-pro.web.id/payment/success'
 
@@ -43,7 +43,7 @@ const PLANS = {
 }
 
 // ============================================================================
-// SHA256 SIGNATURE GENERATOR
+// SHA256 SIGNATURE GENERATOR (FOR TRANSACTION BODY)
 // ============================================================================
 async function generateSignature(
   merchantCode: string,
@@ -52,6 +52,22 @@ async function generateSignature(
   apiKey: string
 ): Promise<string> {
   const signatureString = merchantCode + orderId + amount + apiKey
+  const encoder = new TextEncoder()
+  const data = encoder.encode(signatureString)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+// ============================================================================
+// SHA256 SIGNATURE GENERATOR (FOR BASIC AUTH HEADER)
+// ============================================================================
+async function generateHeaderSignature(
+  merchantCode: string,
+  timestamp: string,
+  apiKey: string
+): Promise<string> {
+  const signatureString = merchantCode + timestamp + apiKey
   const encoder = new TextEncoder()
   const data = encoder.encode(signatureString)
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
@@ -129,7 +145,7 @@ serve(async (req) => {
     const orderId = `OASIS-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`
     console.log('🆔 Generated order ID:', orderId)
 
-    // Generate signature
+    // Generate transaction body signature
     const amount = plan.price
     const signature = await generateSignature(
       DUITKU_MERCHANT_CODE,
@@ -137,7 +153,16 @@ serve(async (req) => {
       amount.toString(),
       DUITKU_API_KEY
     )
-    console.log('🔐 Signature generated successfully')
+    console.log('🔐 Transaction body signature generated successfully')
+
+    // Generate basic authentication headers
+    const timestamp = Date.now().toString()
+    const headerSignature = await generateHeaderSignature(
+      DUITKU_MERCHANT_CODE,
+      timestamp,
+      DUITKU_API_KEY
+    )
+    console.log('🔐 Header signature generated successfully')
 
     // Prepare Duitku payload
     const duitkuPayload = {
@@ -175,7 +200,10 @@ serve(async (req) => {
           {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'x-duitku-signature': headerSignature,
+              'x-duitku-timestamp': timestamp,
+              'x-duitku-merchantcode': DUITKU_MERCHANT_CODE
             },
             body: JSON.stringify(duitkuPayload)
           }
