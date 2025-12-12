@@ -1,359 +1,243 @@
-# OASIS BI PRO - Duitku Integration v2.1
+# 🚀 URGENT: HTTP 405 Fix - Ready for Deployment
 
-## 🚀 DEPLOYMENT READY
+## 🎯 Quick Start (5 Minutes)
 
-### ✅ What's Completed:
-
-1. **✅ Duitku Payment Integration**
-   - Merchant Code: `DS26338`
-   - API Key: `ce2e52f9b81419c260adfd646c1cffdd`
-   - Sandbox Mode: `Enabled`
-   - Payment Methods API: ✅ Working
-   - Create Payment API: ✅ Working
-   - Callback Handler: ✅ Working
-   - Transaction Status Check: ✅ Working
-
-2. **✅ GitHub Repository**
-   - Repository: `Estes786/oasis-bi-pro-duitku-v2.1`
-   - URL: https://github.com/Estes786/oasis-bi-pro-duitku-v2.1
-   - Branch: `main`
-   - Status: **PUSHED SUCCESSFULLY**
-
-3. **✅ Project Structure**
-   - Next.js 15 with App Router
-   - TypeScript
-   - Tailwind CSS
-   - Supabase Integration
-   - Duitku Payment Gateway
-   - Legal Pages (Privacy, Terms, Refund, Contact, FAQ, DPA, Cookies)
-
-4. **✅ Payment Flow**
-   - Checkout Page: `/checkout?plan=starter|professional|business`
-   - Payment Methods Selection
-   - Customer Information Form
-   - Payment Creation
-   - Redirect to Duitku Payment Page
-   - Callback Handling
-   - Transaction Status Verification
+**Problem:** Edge functions return 405 error  
+**Solution:** Code fixed and ready to deploy  
+**Action Required:** Deploy to production NOW
 
 ---
 
-## 📦 VERCEL DEPLOYMENT INSTRUCTIONS
+## ⚡ FASTEST Deployment Method
 
-### Method 1: Auto-Deploy (Recommended)
+### Step 1: Open Supabase Dashboard
+Click here: https://app.supabase.com/project/qjzdzkdwtsszqjvxeiqv/functions
 
-1. **Go to Vercel Dashboard**: https://vercel.com/new
-2. **Import Git Repository**:
-   - Click "Import Git Repository"
-   - Connect GitHub account
-   - Select: `Estes786/oasis-bi-pro-duitku-v2.1`
-3. **Configure Project**:
-   - **Framework Preset**: Next.js
-   - **Root Directory**: `./`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `.next`
-   - **Install Command**: `npm install`
-4. **Environment Variables** (CRITICAL):
-   \`\`\`env
-   # Duitku Payment Gateway (Sandbox)
-   NEXT_PUBLIC_DUITKU_MERCHANT_CODE=DS26338
-   DUITKU_API_KEY=ce2e52f9b81419c260adfd646c1cffdd
-   DUITKU_SANDBOX_MODE=true
-   
-   # Supabase (Replace with your credentials)
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
-   
-   # App URLs (Will be auto-filled by Vercel)
-   NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
-   NEXT_PUBLIC_API_URL=https://your-app.vercel.app/api
-   \`\`\`
-5. **Click "Deploy"**
-6. **Wait for Build** (~3-5 minutes)
-7. **Get Live URL**: https://oasis-bi-pro-duitku-v2-1.vercel.app
+### Step 2: Deploy duitku-checkout
+1. Click on **"duitku-checkout"** function
+2. Click **"Deploy new version"** button  
+3. Upload file: **Browse to your local copy → `supabase/functions/duitku-checkout/index.ts`**
+4. **IMPORTANT:** Uncheck "Verify JWT" ⚠️
+5. Click **"Deploy"**
+6. Wait 30 seconds
 
-### Method 2: Vercel CLI
+### Step 3: Deploy duitku-callback  
+1. Click on **"duitku-callback"** function
+2. Click **"Deploy new version"** button
+3. Upload file: **Browse to your local copy → `supabase/functions/duitku-callback/index.ts`**  
+4. **IMPORTANT:** Uncheck "Verify JWT" ⚠️
+5. Click **"Deploy"**
+6. Wait 30 seconds
 
-\`\`\`bash
-# Install Vercel CLI
-npm i -g vercel
+### Step 4: Test (30 seconds)
+```bash
+# Open terminal and run:
+curl https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-checkout
+curl https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback
 
-# Login to Vercel
-vercel login
+# Both should return 200 OK with JSON response (NOT 405!)
+```
 
-# Deploy to Vercel
+Or open in browser:
+- https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-checkout
+- https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback
+
+**Expected Result:** JSON response with "success": true (NOT 405 error!)
+
+---
+
+## 📋 What Was Fixed
+
+### Before (Current Production - BROKEN):
+```
+GET → 405 Method Not Allowed ❌
+```
+
+### After (New Code - FIXED):
+```
+GET → 200 OK with health check info ✅
+POST → Payment processing (still works) ✅
+```
+
+### Files Modified:
+- ✅ `supabase/functions/duitku-callback/index.ts`
+- ✅ `supabase/functions/duitku-checkout/index.ts`
+
+### Changes:
+- ✅ Added GET endpoint support
+- ✅ Returns health check JSON instead of 405
+- ✅ POST still works for payments
+- ✅ All local tests passing
+
+---
+
+## 🧪 Verification Checklist
+
+After deployment, verify:
+
+- [ ] **Test 1:** Open https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-checkout in browser
+  - Should show JSON (NOT 405 error)
+  
+- [ ] **Test 2:** Open https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback in browser
+  - Should show JSON (NOT 405 error)
+  
+- [ ] **Test 3:** Run automated test
+  ```bash
+  cd /home/user/webapp
+  ./test-production.sh
+  ```
+  - Should show: "🎉 ALL TESTS PASSED!"
+  
+- [ ] **Test 4:** Create test payment
+  - Go to website
+  - Select plan
+  - Complete checkout
+  - Verify payment works
+  
+- [ ] **Test 5:** Check callback
+  - After payment
+  - Check Supabase logs
+  - Verify callback received
+
+---
+
+## 📁 File Locations
+
+If you need to manually copy files:
+
+**Checkout Function:**
+```
+Local: /home/user/webapp/supabase/functions/duitku-checkout/index.ts
+GitHub: https://github.com/Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new/blob/main/supabase/functions/duitku-checkout/index.ts
+```
+
+**Callback Function:**
+```
+Local: /home/user/webapp/supabase/functions/duitku-callback/index.ts
+GitHub: https://github.com/Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new/blob/main/supabase/functions/duitku-callback/index.ts
+```
+
+---
+
+## 🔧 Alternative: CLI Deployment
+
+If you prefer CLI:
+
+```bash
+# Get access token from: https://app.supabase.com/account/tokens
+export SUPABASE_ACCESS_TOKEN=your_token_here
+
+# Run deployment script
 cd /home/user/webapp
-vercel --prod
+./deploy-now.sh
 
-# Follow prompts and configure environment variables
-\`\`\`
+# Or manually:
+supabase login
+supabase link --project-ref qjzdzkdwtsszqjvxeiqv
+supabase functions deploy duitku-checkout --no-verify-jwt
+supabase functions deploy duitku-callback --no-verify-jwt
+```
 
 ---
 
-## 🧪 TESTING DUITKU INTEGRATION
+## 📊 Expected Results
 
-### Test Payment Flow:
+### Test Output (After Deployment):
+```bash
+$ ./test-production.sh
 
-1. **Visit Deployment URL**: `https://your-app.vercel.app`
-2. **Go to Pricing Page**: `/pricing`
-3. **Click "Mulai Sekarang" on any plan**
-4. **Fill Checkout Form**:
-   - **Plan**: Starter / Professional / Business
-   - **Name**: Test User
-   - **Email**: test@example.com
-   - **Phone**: 08123456789
-5. **Select Payment Method**:
-   - Virtual Account (BCA, Mandiri, BNI, BRI)
-   - E-Wallet (OVO, DANA, ShopeePay)
-   - QRIS
-6. **Click "Bayar Sekarang"**
-7. **Verify Redirect to Duitku Payment Page**
-8. **Complete Payment (Sandbox)**
-9. **Check Callback**: Should redirect to `/payment/success`
+🧪 Testing Production Edge Functions
+======================================
 
-### Test API Endpoints:
-
-\`\`\`bash
-# 1. Get Payment Methods
-curl -X GET "https://your-app.vercel.app/api/duitku/payment-methods?amount=299000"
-
-# Expected Response:
+🔍 Test 1: Checkout GET (Health Check)
+Response Code: 200 ✅
+Response Body:
 {
   "success": true,
-  "paymentMethods": [
-    {
-      "paymentMethod": "BV",
-      "paymentName": "BCA Virtual Account",
-      "paymentImage": "...",
-      "totalFee": "4000"
-    },
-    ...
-  ]
-}
-
-# 2. Create Payment
-curl -X POST "https://your-app.vercel.app/api/duitku/create-payment" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "planType": "starter",
-    "amount": 299000,
-    "customerName": "Test User",
-    "customerEmail": "test@example.com",
-    "customerPhone": "08123456789",
-    "paymentMethod": "BV"
-  }'
-
-# Expected Response:
-{
-  "success": true,
-  "paymentUrl": "https://sandbox.duitku.com/payment/...",
-  "reference": "...",
-  "merchantOrderId": "OASIS-...",
-  "orderId": "..."
-}
-
-# 3. Check Transaction Status
-curl -X GET "https://your-app.vercel.app/api/duitku/check-status?merchantOrderId=OASIS-..."
-
-# Expected Response:
-{
-  "success": true,
-  "status": "pending|success|failed",
+  "message": "Duitku Checkout endpoint is running",
+  "version": "3.0",
   ...
 }
-\`\`\`
+
+🔍 Test 2: Callback GET (Health Check)  
+Response Code: 200 ✅
+Response Body:
+{
+  "success": true,
+  "message": "Duitku Callback endpoint is running",
+  "version": "3.0",
+  ...
+}
+
+🎉 ALL TESTS PASSED!
+```
 
 ---
 
-## 🔧 ENVIRONMENT VARIABLES SETUP
+## 🆘 Troubleshooting
 
-### Required Variables:
+### Still seeing 405 after deployment?
+1. Wait 1-2 minutes (cache clearing)
+2. Hard refresh browser (Ctrl+Shift+R)
+3. Check function version in dashboard
+4. Re-deploy if needed
 
-| Variable | Value | Description |
-|----------|-------|-------------|
-| `NEXT_PUBLIC_DUITKU_MERCHANT_CODE` | `DS26338` | Duitku Merchant Code (Sandbox) |
-| `DUITKU_API_KEY` | `ce2e52f9b81419c260adfd646c1cffdd` | Duitku API Key (Sandbox) |
-| `DUITKU_SANDBOX_MODE` | `true` | Enable Sandbox Mode |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://...supabase.co` | Supabase Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJh...` | Supabase Anonymous Key |
-| `SUPABASE_SERVICE_ROLE_KEY` | `eyJh...` | Supabase Service Role Key |
-| `NEXT_PUBLIC_APP_URL` | `https://...vercel.app` | Your App URL |
-| `NEXT_PUBLIC_API_URL` | `https://...vercel.app/api` | API Base URL |
+### Deployment failed?
+1. Check you unchecked "Verify JWT"
+2. Verify you uploaded correct file
+3. Check for TypeScript errors
+4. View deployment logs
 
-### How to Set in Vercel:
-
-1. Go to: https://vercel.com/dashboard
-2. Select your project: `oasis-bi-pro-duitku-v2-1`
-3. Click **Settings** → **Environment Variables**
-4. Add each variable above
-5. Click **Save**
-6. **Redeploy** to apply changes
+### Can't access dashboard?
+1. Check you're logged into correct account
+2. Verify project permissions
+3. Use CLI method instead
 
 ---
 
-## 📊 SUPABASE SETUP (If Needed)
+## 📞 Support Files
 
-### Option 1: Use Existing Supabase Project
-
-1. Copy credentials from your existing project
-2. Add to Vercel environment variables
-3. Done!
-
-### Option 2: Create New Supabase Project
-
-1. **Go to**: https://supabase.com/dashboard
-2. **Create New Project**:
-   - Name: `oasis-bi-pro-duitku-v2`
-   - Region: `Singapore (Southeast Asia)`
-   - Database Password: (Strong password)
-3. **Get Credentials**:
-   - Go to **Settings** → **API**
-   - Copy `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-   - Copy `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - Copy `service_role` key → `SUPABASE_SERVICE_ROLE_KEY`
-4. **Run Database Migrations**:
-   \`\`\`sql
-   -- Run this in Supabase SQL Editor
-   -- File: supabase/migrations/001_oasis_bi_pro_schema.sql
-   -- (Check the file in the repository)
-   \`\`\`
-5. **Add to Vercel** environment variables
-6. **Redeploy**
+All documentation available:
+- **This file:** Quick deployment guide
+- **FIX_SUMMARY.md:** Complete problem analysis  
+- **DEPLOY_INSTRUCTIONS.md:** Detailed deployment steps
+- **test-production.sh:** Automated testing
+- **deploy-now.sh:** CLI deployment script
 
 ---
 
-## 🎯 NEXT STEPS AFTER DEPLOYMENT
+## ✅ Success Criteria
 
-### 1. **Test Live Payment Flow**
-   - Visit: `https://your-app.vercel.app/checkout?plan=starter`
-   - Complete full payment flow
-   - Verify redirect to Duitku payment page
-   - Check callback handling
-
-### 2. **Verify Legal Pages**
-   - `/legal/privacy` - Privacy Policy
-   - `/legal/terms` - Terms of Service
-   - `/legal/refund` - Refund Policy
-   - `/legal/contact` - Contact Information
-   - `/legal/faq` - FAQ
-   - `/legal/dpa` - Data Processing Agreement
-   - `/legal/cookies` - Cookie Policy
-
-### 3. **Configure Custom Domain** (Optional)
-   - Go to Vercel Dashboard → Settings → Domains
-   - Add your domain: `oasis-bi-pro-duitku-v2.vercel.app` or custom domain
-   - Configure DNS records
-   - Wait for SSL certificate
-
-### 4. **Update Duitku Callback URL**
-   - Login to: https://sandbox.duitku.com
-   - Go to **Settings** → **API Configuration**
-   - Set Callback URL: `https://your-app.vercel.app/api/duitku/callback`
-   - Set Return URL: `https://your-app.vercel.app/payment/success`
-   - Save
-
-### 5. **Monitor Deployments**
-   - Vercel Dashboard: https://vercel.com/dashboard
-   - Check build logs
-   - Monitor runtime logs
-   - Set up error alerts
+Deployment is successful when:
+1. ✅ No 405 errors on GET requests
+2. ✅ Both endpoints return 200 OK
+3. ✅ Health check JSON visible
+4. ✅ POST payments still work
+5. ✅ Callbacks received
+6. ✅ Transactions complete successfully
 
 ---
 
-## 📝 IMPORTANT NOTES
+## 🎉 After Deployment
 
-### ⚠️ Legal Pages Issue Fix:
-The legal pages were showing blank/white screen on the previous deployment. This has been **FIXED** by:
-1. ✅ Ensuring proper component structure
-2. ✅ Adding proper TypeScript types
-3. ✅ Using Next.js 15 App Router correctly
-4. ✅ Adding proper error boundaries
-5. ✅ Testing all legal page routes
+Once deployed successfully:
 
-### ⚠️ Duitku Sandbox vs Production:
-- **Current**: Sandbox Mode (DS26338)
-- **For Production**: Need to activate production merchant code
-- **Change**: Set `DUITKU_SANDBOX_MODE=false` and update credentials
-
-### ⚠️ Supabase Database:
-- **Current**: Using placeholder credentials
-- **Required**: Real Supabase project with proper database schema
-- **Migration**: Run `supabase/migrations/001_oasis_bi_pro_schema.sql`
+1. **Test immediately** - Run `./test-production.sh`
+2. **Verify in browser** - Open both endpoint URLs
+3. **Test payment flow** - Create test transaction
+4. **Monitor logs** - Check for any errors
+5. **Celebrate** - Fix is live! 🎊
 
 ---
 
-## 🔍 TROUBLESHOOTING
+**Time to Deploy:** ~5 minutes  
+**Time to Test:** ~2 minutes  
+**Total Time:** ~7 minutes  
 
-### Issue: Build Fails on Vercel
-**Solution**:
-1. Check build logs in Vercel dashboard
-2. Verify all environment variables are set
-3. Ensure Node.js version is 18+ (set in `package.json`)
-4. Check for TypeScript errors
-
-### Issue: Payment API Returns 500 Error
-**Solution**:
-1. Verify Duitku credentials in environment variables
-2. Check Supabase connection
-3. Verify API key is correct: `ce2e52f9b81419c260adfd646c1cffdd`
-4. Check Vercel function logs
-
-### Issue: Legal Pages Show 404
-**Solution**:
-1. Verify files exist in `app/legal/*/page.tsx`
-2. Check Next.js routing
-3. Clear browser cache
-4. Redeploy to Vercel
-
-### Issue: Callback Not Working
-**Solution**:
-1. Verify callback URL in Duitku dashboard
-2. Check Vercel function logs
-3. Ensure callback route exists: `/api/duitku/callback`
-4. Verify signature validation
+**LET'S DO THIS!** 🚀
 
 ---
 
-## 🎉 SUCCESS CRITERIA
-
-✅ **Deployment Successful** if:
-1. App is accessible at live URL
-2. All pages load without errors
-3. Checkout flow works end-to-end
-4. Payment methods load correctly
-5. Payment creation returns payment URL
-6. Redirect to Duitku payment page works
-7. Callback handling works
-8. Legal pages are accessible
-
----
-
-## 📞 SUPPORT
-
-- **GitHub**: https://github.com/Estes786/oasis-bi-pro-duitku-v2.1
-- **Email**: elfaress2425@gmail.com
-- **WhatsApp**: +62 857-1265-8316
-- **Duitku Docs**: https://docs.duitku.com/
-
----
-
-## 📅 VERSION HISTORY
-
-- **v2.1.0** (Nov 25, 2024) - Duitku Integration Complete
-  - ✅ Integrated Duitku Payment Gateway (Sandbox)
-  - ✅ Updated credentials (DS26338)
-  - ✅ Fixed legal pages error
-  - ✅ Pushed to GitHub
-  - ✅ Ready for Vercel deployment
-
-- **v2.0.0** (Nov 19, 2024) - Initial Duitku Version
-  - Initial setup with Duitku
-  - Basic payment flow
-  - Legal pages structure
-
----
-
-**🚀 DEPLOYMENT STATUS: READY FOR PRODUCTION**
-
-**📌 NEXT ACTION**: Deploy to Vercel using instructions above and get live preview URL!
+**Last Updated:** 2025-12-12  
+**Status:** ⏳ Awaiting Deployment  
+**Code Status:** ✅ Fixed and Ready
