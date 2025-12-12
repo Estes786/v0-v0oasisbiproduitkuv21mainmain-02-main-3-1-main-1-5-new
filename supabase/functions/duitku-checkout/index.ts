@@ -1,9 +1,9 @@
 // ============================================================================
-// SUPABASE EDGE FUNCTION: DUITKU CHECKOUT
+// SUPABASE EDGE FUNCTION: DUITKU CHECKOUT (POP INTEGRATION)
 // ============================================================================
-// Purpose: Create Duitku payment invoice
-// Runs on: Deno Deploy (better network than Vercel)
-// Solves: DNS resolution error (ENOTFOUND api.duitku.com)
+// Purpose: Create Duitku payment invoice untuk Pop integration
+// Documentation: https://docs.duitku.com/pop/en/
+// Fixed: API endpoint, signature, parameters sesuai dokumentasi resmi
 // ============================================================================
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -12,13 +12,25 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
 // ============================================================================
 // CONFIGURATION & CREDENTIALS
 // ============================================================================
+const ENVIRONMENT = Deno.env.get('ENVIRONMENT') || 'sandbox'
+const IS_PRODUCTION = ENVIRONMENT === 'production'
+
 const DUITKU_MERCHANT_CODE = Deno.env.get('DUITKU_MERCHANT_CODE') || 'D20919'
 const DUITKU_API_KEY = Deno.env.get('DUITKU_API_KEY') || '17d9d5e20fbf4763a44c41a1e95cb7cb'
-const DUITKU_BASE_URL = Deno.env.get('DUITKU_BASE_URL') || 'https://api-sandbox.duitku.com/webapi/v1/payment' // Changed from api.duitku.com to api-sandbox.duitku.com for testing/DNS issue
-const CALLBACK_URL = Deno.env.get('DUITKU_CALLBACK_URL') || 'https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback'
-const RETURN_URL = Deno.env.get('DUITKU_RETURN_URL') || 'https://www.oasis-bi-pro.web.id/payment/success'
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://qjzdzkdwtsszqjvxeiqv.supabase.co'
+// CORRECT API ENDPOINTS (Fixed from wrong /webapi/v1/payment to /api/merchant)
+const DUITKU_API_URL = IS_PRODUCTION
+  ? 'https://api-prod.duitku.com/api/merchant'
+  : 'https://api-sandbox.duitku.com/api/merchant'
+
+const CALLBACK_URL = Deno.env.get('DUITKU_CALLBACK_URL') || 
+  'https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback'
+
+const RETURN_URL = Deno.env.get('DUITKU_RETURN_URL') || 
+  'https://www.oasis-bi-pro.web.id/payment/success'
+
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 
+  'https://qjzdzkdwtsszqjvxeiqv.supabase.co'
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 // ============================================================================
@@ -43,24 +55,8 @@ const PLANS = {
 }
 
 // ============================================================================
-// SHA256 SIGNATURE GENERATOR (FOR TRANSACTION BODY)
-// ============================================================================
-async function generateSignature(
-  merchantCode: string,
-  orderId: string,
-  amount: string,
-  apiKey: string
-): Promise<string> {
-  const signatureString = merchantCode + orderId + amount + apiKey
-  const encoder = new TextEncoder()
-  const data = encoder.encode(signatureString)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-}
-
-// ============================================================================
-// SHA256 SIGNATURE GENERATOR (FOR BASIC AUTH HEADER)
+// SHA256 SIGNATURE GENERATOR FOR API REQUEST HEADERS
+// Documentation: SHA256(merchantCode + timestamp + apiKey)
 // ============================================================================
 async function generateHeaderSignature(
   merchantCode: string,
@@ -145,18 +141,10 @@ serve(async (req) => {
     const orderId = `OASIS-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`
     console.log('🆔 Generated order ID:', orderId)
 
-    // Generate transaction body signature
-    const amount = plan.price
-    const signature = await generateSignature(
-      DUITKU_MERCHANT_CODE,
-      orderId,
-      amount.toString(),
-      DUITKU_API_KEY
-    )
-    console.log('🔐 Transaction body signature generated successfully')
-
-    // Generate basic authentication headers
+    // Generate timestamp (Jakarta timezone, milliseconds)
     const timestamp = Date.now().toString()
+    
+    // Generate header signature (SHA256)
     const headerSignature = await generateHeaderSignature(
       DUITKU_MERCHANT_CODE,
       timestamp,
@@ -164,138 +152,162 @@ serve(async (req) => {
     )
     console.log('🔐 Header signature generated successfully')
 
-    // Prepare Duitku payload
+    // Split customer name for firstName/lastName
+    const nameParts = customerName.trim().split(' ')
+    const firstName = nameParts[0] || customerName
+    const lastName = nameParts.slice(1).join(' ') || ''
+
+    // Prepare Duitku payload (CORRECT format for Pop integration)
+    // Documentation: https://docs.duitku.com/pop/en/#create-invoice
     const duitkuPayload = {
-      merchantCode: DUITKU_MERCHANT_CODE,
-      paymentMethod: 'VC', // Virtual Account (default)
+      paymentAmount: plan.price,          // Note: paymentAmount, not amount
       merchantOrderId: orderId,
       productDetails: plan.description,
-      amount: amount,
+      additionalParam: '',
+      merchantUserInfo: '',
+      customerVaName: customerName,
       email: email,
       phoneNumber: phoneNumber,
-      customerVaName: customerName,
       itemDetails: [{
         name: plan.name,
-        price: amount,
+        price: plan.price,
         quantity: 1
       }],
+      customerDetail: {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phoneNumber: phoneNumber,
+        billingAddress: {
+          firstName: firstName,
+          lastName: lastName,
+          address: 'Indonesia',
+          city: 'Jakarta',
+          postalCode: '10110',
+          phone: phoneNumber,
+          countryCode: 'ID'
+        },
+        shippingAddress: {
+          firstName: firstName,
+          lastName: lastName,
+          address: 'Indonesia',
+          city: 'Jakarta',
+          postalCode: '10110',
+          phone: phoneNumber,
+          countryCode: 'ID'
+        }
+      },
       callbackUrl: CALLBACK_URL,
       returnUrl: RETURN_URL,
-      signature: signature,
-      expiryPeriod: 60 // 60 minutes
+      expiryPeriod: 60  // 60 minutes
     }
 
-    console.log('📤 Sending request to Duitku API:', `${DUITKU_BASE_URL}/createInvoice`)
+    console.log('📤 Sending request to Duitku API:', `${DUITKU_API_URL}/createInvoice`)
+    console.log('   Environment:', IS_PRODUCTION ? 'PRODUCTION' : 'SANDBOX')
 
-    // Call Duitku API with retry mechanism
-    let lastError: Error | null = null
-    const maxRetries = 3
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`🔄 Attempt ${attempt}/${maxRetries}`)
-        
-        const duitkuResponse = await fetch(
-          `${DUITKU_BASE_URL}/createInvoice`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-duitku-signature': headerSignature,
-              'x-duitku-timestamp': timestamp,
-              'x-duitku-merchantcode': DUITKU_MERCHANT_CODE
-            },
-            body: JSON.stringify(duitkuPayload)
-          }
-        )
-
-        const duitkuData = await duitkuResponse.json()
-        console.log('📥 Duitku response:', duitkuData)
-
-        if (duitkuResponse.ok && duitkuData.paymentUrl) {
-          console.log('✅ Payment URL generated:', duitkuData.paymentUrl)
-
-          // Save transaction to database (if Supabase client is configured)
-          if (SERVICE_ROLE_KEY) {
-            try {
-              const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
-                auth: { persistSession: false }
-              })
-
-              const { error: dbError } = await supabase
-                .from('transactions')
-                .insert({
-                  order_id: orderId,
-                  plan_type: planId,
-                  amount: amount,
-                  customer_name: customerName,
-                  customer_email: email,
-                  customer_phone: phoneNumber,
-                  status: 'PENDING',
-                  payment_url: duitkuData.paymentUrl,
-                  duitku_reference: duitkuData.reference,
-                  created_at: new Date().toISOString()
-                })
-
-              if (dbError) {
-                console.error('⚠️ Database insert failed:', dbError.message)
-              } else {
-                console.log('💾 Transaction saved to database')
-              }
-            } catch (dbError) {
-              console.error('⚠️ Database error:', dbError)
-            }
-          }
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              data: {
-                paymentUrl: duitkuData.paymentUrl,
-                orderId: orderId,
-                reference: duitkuData.reference,
-                amount: amount
-              }
-            }),
-            { 
-              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-            }
-          )
-        } else {
-          throw new Error(duitkuData.message || 'Payment creation failed')
-        }
-      } catch (error) {
-        lastError = error as Error
-        console.error(`❌ Attempt ${attempt} failed:`, lastError.message)
-        
-        if (attempt < maxRetries) {
-          // Wait before retry (exponential backoff)
-          const waitTime = Math.pow(2, attempt) * 1000
-          console.log(`⏳ Waiting ${waitTime}ms before retry...`)
-          await new Promise(resolve => setTimeout(resolve, waitTime))
-        }
-      }
-    }
-
-    // All retries failed
-    console.error('💥 ALL RETRY ATTEMPTS FAILED')
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `Payment creation failed after ${maxRetries} attempts: ${lastError?.message}` 
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    // Call Duitku API with proper headers
+    const duitkuResponse = await fetch(
+      `${DUITKU_API_URL}/createInvoice`,
+      {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'x-duitku-signature': headerSignature,
+          'x-duitku-timestamp': timestamp,
+          'x-duitku-merchantcode': DUITKU_MERCHANT_CODE
+        },
+        body: JSON.stringify(duitkuPayload)
       }
     )
 
+    const responseText = await duitkuResponse.text()
+    console.log('📥 Duitku raw response:', responseText)
+    
+    let duitkuData
+    try {
+      duitkuData = JSON.parse(responseText)
+    } catch (parseError) {
+      console.error('❌ Failed to parse Duitku response:', parseError)
+      throw new Error(`Invalid JSON response from Duitku: ${responseText.substring(0, 200)}`)
+    }
+
+    console.log('📥 Duitku parsed response:', duitkuData)
+    console.log('   Status Code:', duitkuData.statusCode)
+    console.log('   Status Message:', duitkuData.statusMessage)
+
+    if (duitkuResponse.ok && duitkuData.reference) {
+      console.log('✅ Payment created successfully')
+      console.log('   Reference:', duitkuData.reference)
+      console.log('   Payment URL:', duitkuData.paymentUrl)
+
+      // Save transaction to database
+      if (SERVICE_ROLE_KEY) {
+        try {
+          const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+            auth: { persistSession: false }
+          })
+
+          const { error: dbError } = await supabase
+            .from('transactions')
+            .insert({
+              order_id: orderId,
+              plan_type: planId,
+              amount: plan.price,
+              customer_name: customerName,
+              customer_email: email,
+              customer_phone: phoneNumber,
+              status: 'PENDING',
+              payment_url: duitkuData.paymentUrl,
+              duitku_reference: duitkuData.reference,
+              created_at: new Date().toISOString()
+            })
+
+          if (dbError) {
+            console.error('⚠️ Database insert failed:', dbError.message)
+          } else {
+            console.log('💾 Transaction saved to database')
+          }
+        } catch (dbError) {
+          console.error('⚠️ Database error:', dbError)
+        }
+      }
+
+      // Return success with reference for Pop integration
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            reference: duitkuData.reference,          // For Duitku Pop JS
+            paymentUrl: duitkuData.paymentUrl,        // For fallback redirect
+            orderId: orderId,
+            amount: plan.price,
+            merchantCode: duitkuData.merchantCode,
+            statusCode: duitkuData.statusCode,
+            statusMessage: duitkuData.statusMessage
+          }
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    } else {
+      const errorMessage = duitkuData.statusMessage || duitkuData.message || 'Payment creation failed'
+      console.error('❌ Duitku API error:', errorMessage)
+      console.error('   Status Code:', duitkuData.statusCode)
+      console.error('   Response:', duitkuData)
+      
+      throw new Error(errorMessage)
+    }
+
   } catch (error) {
     console.error('💥 GENERAL ERROR:', error)
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error instanceof Error ? error.message : 'Internal server error' 
+        error: error instanceof Error ? error.message : 'Internal server error',
+        details: error instanceof Error ? error.stack : undefined
       }),
       { 
         status: 500, 
@@ -306,3 +318,5 @@ serve(async (req) => {
 })
 
 console.log('✅ Duitku Checkout Edge Function is running')
+console.log('   Environment:', Deno.env.get('ENVIRONMENT') || 'sandbox')
+console.log('   API URL:', DUITKU_API_URL)

@@ -5,6 +5,16 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Check, ArrowLeft, ArrowRight, CreditCard, Building2, Wallet, QrCode } from 'lucide-react';
 import { PRICING_PLANS, getPlanBySlug } from '@/lib/pricing';
 import axios from 'axios';
+import Script from 'next/script';
+
+// Declare Duitku checkout global type
+declare global {
+  interface Window {
+    checkout: {
+      process: (reference: string, options: any) => void;
+    };
+  }
+}
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -25,6 +35,7 @@ function CheckoutContent() {
   });
 
   const plan = getPlanBySlug(selectedPlan);
+  const [duitkuLoaded, setDuitkuLoaded] = useState(false);
 
   // Load payment methods when reaching step 3
   useEffect(() => {
@@ -110,8 +121,7 @@ function CheckoutContent() {
 
     setLoading(true);
     try {
-      // MIGRATION TO SUPABASE EDGE FUNCTIONS
-      // Using Edge Functions for better network reliability
+      // USING SUPABASE EDGE FUNCTIONS WITH DUITKU POP INTEGRATION
       const edgeFunctionUrl = process.env.NEXT_PUBLIC_DUITKU_CHECKOUT_URL || 
                              'https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-checkout';
       
@@ -131,13 +141,47 @@ function CheckoutContent() {
 
       console.log('✅ Edge Function Response:', response.data);
 
-      if (response.data.success && response.data.data?.paymentUrl) {
-        console.log('🔗 Redirecting to:', response.data.data.paymentUrl);
-        // Redirect to Duitku payment page
-        window.location.href = response.data.data.paymentUrl;
+      if (response.data.success && response.data.data?.reference) {
+        const { reference, paymentUrl } = response.data.data;
+        
+        console.log('✅ Got Duitku reference:', reference);
+        console.log('✅ Fallback payment URL:', paymentUrl);
+        
+        // Check if Duitku Pop JS is loaded
+        if (typeof window !== 'undefined' && window.checkout && duitkuLoaded) {
+          console.log('🎯 Using Duitku Pop overlay');
+          
+          // Use Duitku Pop overlay (modern integration)
+          window.checkout.process(reference, {
+            defaultLanguage: "id",
+            successEvent: function(result: any) {
+              console.log('✅ Payment SUCCESS:', result);
+              window.location.href = `/payment/success?orderId=${result.merchantOrderId}`;
+            },
+            pendingEvent: function(result: any) {
+              console.log('⏳ Payment PENDING:', result);
+              window.location.href = `/payment/pending?orderId=${result.merchantOrderId}`;
+            },
+            errorEvent: function(result: any) {
+              console.error('❌ Payment ERROR:', result);
+              alert('Pembayaran gagal. Silakan coba lagi.');
+              setLoading(false);
+            },
+            closeEvent: function(result: any) {
+              console.log('🚪 User closed popup:', result);
+              setLoading(false);
+            }
+          });
+        } else {
+          // Fallback: redirect to payment URL
+          console.log('⚠️ Duitku Pop not loaded, using fallback redirect');
+          console.log('🔗 Redirecting to:', paymentUrl);
+          window.location.href = paymentUrl;
+        }
       } else {
         console.error('❌ Payment creation failed:', response.data);
         alert('Gagal membuat pembayaran. Silakan coba lagi.');
+        setLoading(false);
       }
     } catch (error) {
       console.error('💥 Payment creation error:', error);
@@ -147,7 +191,6 @@ function CheckoutContent() {
       } else {
         alert('Terjadi kesalahan. Silakan coba lagi.');
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -169,7 +212,24 @@ function CheckoutContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <>
+      {/* Load Duitku Pop JS */}
+      <Script
+        src={process.env.NEXT_PUBLIC_ENVIRONMENT === 'production'
+          ? 'https://app-prod.duitku.com/lib/js/duitku.js'
+          : 'https://app-sandbox.duitku.com/lib/js/duitku.js'
+        }
+        strategy="afterInteractive"
+        onLoad={() => {
+          console.log('✅ Duitku Pop JS loaded');
+          setDuitkuLoaded(true);
+        }}
+        onError={(e) => {
+          console.error('❌ Failed to load Duitku Pop JS:', e);
+        }}
+      />
+      
+      <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
@@ -463,7 +523,8 @@ function CheckoutContent() {
           <p>🔒 Pembayaran aman dan terenkripsi dengan Duitku</p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 
