@@ -1,133 +1,148 @@
-# 🚀 OASIS BI PRO - Production Deployment Guide (Duitku Go Live)
+# 🚀 DUITKU PRODUCTION DEPLOYMENT GUIDE
 
-## ✅ PERBAIKAN YANG TELAH DILAKUKAN
+## 📋 Overview
 
-### 🔧 Root Cause Analysis
-**Problem:** HTTP 500 Error - `getaddrinfo ENOTFOUND api.duitku.com`
+Panduan lengkap untuk migrasi dari **SANDBOX (Testing)** ke **PRODUCTION (Live Payment)** untuk integrasi Duitku Pop payment gateway.
 
-**Root Cause:** Format URL API Duitku Production berbeda dengan Sandbox
-- ❌ **SALAH (sebelumnya):** `https://api.duitku.com/api/merchant/createInvoice`
-- ✅ **BENAR (sekarang):** `https://api.duitku.com/webapi/v1/payment/api/merchant/createInvoice`
-
-### 📝 File yang Diubah
-
-#### 1. `/lib/duitku.ts`
-**Perubahan:**
-```typescript
-// SEBELUM (Sandbox Config):
-export const DUITKU_CONFIG = {
-  merchantCode: 'DS26557',
-  apiKey: '68e1d64813c7f21a1ffc3839064ab6b3',
-  environment: 'sandbox',
-  baseUrl: 'https://api-sandbox.duitku.com',
-}
-
-// SESUDAH (Production Config):
-export const DUITKU_CONFIG = {
-  merchantCode: 'D20919',
-  apiKey: '17d9d5e20fbf4763a44c41a1e95cb7cb',
-  environment: 'production',
-  baseUrl: 'https://api.duitku.com/webapi/v1/payment',
-}
-```
-
-**Impact:**
-- Endpoint sekarang: `https://api.duitku.com/webapi/v1/payment/api/merchant/createInvoice` ✅
-- Menggunakan kredensial Production asli dari Duitku
-
-#### 2. `/app/api/duitku/check-status/route.ts`
-**Perubahan:**
-- Membuat route lebih defensive terhadap missing Supabase config
-- Menghindari crash saat build jika Supabase belum dikonfigurasi
-
-#### 3. `.env.production.example`
-**File baru** untuk dokumentasi environment variables production
+**⚠️ WARNING:** Production mode akan memproses **PEMBAYARAN NYATA**. Pastikan semua konfigurasi benar sebelum deploy!
 
 ---
 
-## 🌐 DEPLOYMENT KE VERCEL/NETLIFY
+## 🎯 Prerequisites
 
-### Step 1: Setup Environment Variables di Platform Hosting
+Sebelum mulai, pastikan Anda memiliki:
 
-**CRITICAL:** Anda HARUS mengatur Environment Variables berikut di dashboard Vercel/Netlify:
-
-```bash
-# Duitku Production Credentials
-NEXT_PUBLIC_DUITKU_MERCHANT_CODE=D20919
-DUITKU_API_KEY=17d9d5e20fbf4763a44c41a1e95cb7cb
-NEXT_PUBLIC_DUITKU_ENV=production
-NEXT_PUBLIC_DUITKU_API_URL=https://api.duitku.com/webapi/v1/payment
-NEXT_PUBLIC_DUITKU_RETURN_URL=https://www.oasis-bi-pro.web.id/payment/success
-NEXT_PUBLIC_DUITKU_CALLBACK_URL=https://www.oasis-bi-pro.web.id/api/duitku/callback
-
-# Supabase Configuration (replace with your actual values)
-NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_actual_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_actual_service_role_key
-```
-
-### Step 2: Deploy ke Vercel
-
-#### Via Vercel CLI:
-```bash
-# Install Vercel CLI (jika belum)
-npm install -g vercel
-
-# Login ke Vercel
-vercel login
-
-# Deploy production
-vercel --prod
-```
-
-#### Via Vercel Dashboard:
-1. Login ke https://vercel.com
-2. Import repository: `Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new`
-3. Set Environment Variables (lihat Step 1)
-4. Deploy!
-
-### Step 3: Deploy ke Netlify
-
-#### Via Netlify CLI:
-```bash
-# Install Netlify CLI (jika belum)
-npm install -g netlify-cli
-
-# Login ke Netlify
-netlify login
-
-# Build dan deploy
-npm run build
-netlify deploy --prod --dir=.next
-```
-
-#### Via Netlify Dashboard:
-1. Login ke https://app.netlify.com
-2. New site from Git
-3. Connect GitHub repository
-4. Set Environment Variables (lihat Step 1)
-5. Deploy!
+- ✅ Akun Duitku yang sudah terverifikasi
+- ✅ Merchant Code Production: `D20919`
+- ✅ API Key Production: `17d9d5e20fbf4763a44c41a1e95cb7cb`
+- ✅ Akses ke Supabase project: `qjzdzkdwtsszqjvxeiqv`
+- ✅ Akses ke website: `https://www.oasis-bi-pro.web.id`
+- ✅ Vercel account (untuk frontend deployment)
 
 ---
 
-## ✅ VALIDATION CHECKLIST
+## 📊 SANDBOX vs PRODUCTION Differences
 
-Setelah deployment, lakukan pengujian berikut:
+| Aspect | SANDBOX (Test) | PRODUCTION (Live) |
+|--------|----------------|-------------------|
+| **API Endpoint** | `https://api-sandbox.duitku.com/api/merchant` | `https://api-prod.duitku.com/api/merchant` |
+| **Duitku Pop JS** | `https://app-sandbox.duitku.com/lib/js/duitku.js` | `https://app-prod.duitku.com/lib/js/duitku.js` |
+| **Payment Page** | `https://app-sandbox.duitku.com/redirect_checkout?...` | `https://app-prod.duitku.com/redirect_checkout?...` |
+| **Merchant Code** | Test merchant code | `D20919` (Production) |
+| **API Key** | Test API key | `17d9d5e20fbf4763a44c41a1e95cb7cb` (Production) |
+| **Transactions** | ✅ Dummy/simulated | ⚠️ REAL money |
+| **Test Cards** | ✅ Dummy cards work | ❌ Only real cards |
+| **Payment Flow** | Testing only | Real payment processing |
 
-### Test 1: Homepage Access
-```bash
-curl -I https://www.oasis-bi-pro.web.id
-# Expected: HTTP/1.1 200 OK
+**Documentation:** https://docs.duitku.com/pop/en/
+
+---
+
+## 🔧 Step-by-Step Production Deployment
+
+### **PHASE 1: Duitku Dashboard Configuration**
+
+#### 1.1 Login ke Duitku Merchant Dashboard
+```
+URL: https://passport.duitku.com
+Login dengan credentials Anda
 ```
 
-### Test 2: Checkout API Endpoint
+#### 1.2 Select Production Project
+1. Navigate to **My Projects**
+2. Find project dengan Merchant Code: `D20919`
+3. Pastikan project dalam **PRODUCTION mode** (bukan sandbox)
+4. Verify API Key: `17d9d5e20fbf4763a44c41a1e95cb7cb`
+
+#### 1.3 Configure Callback URL
+```
+Setting location: Project Settings → Callback Configuration
+Callback URL: https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback
+Return URL: https://www.oasis-bi-pro.web.id/payment/success
+```
+
+**CRITICAL:** Callback URL harus **EXACT MATCH** dengan URL edge function Supabase!
+
+#### 1.4 Verify Merchant Account Status
+- ✅ Account status: **Active/Verified**
+- ✅ Bank account linked
+- ✅ Settlement configured
+- ✅ Production mode enabled
+
+---
+
+### **PHASE 2: Supabase Edge Functions Deployment**
+
+#### 2.1 Login ke Supabase CLI
 ```bash
-curl -X POST https://www.oasis-bi-pro.web.id/api/duitku/checkout \
+cd /home/user/webapp
+
+# Login (akan buka browser)
+npx supabase login
+
+# Link to project
+npx supabase link --project-ref qjzdzkdwtsszqjvxeiqv
+```
+
+#### 2.2 Deploy Edge Functions
+```bash
+# Deploy duitku-checkout function
+npx supabase functions deploy duitku-checkout --no-verify-jwt
+
+# Deploy duitku-callback function
+npx supabase functions deploy duitku-callback --no-verify-jwt
+
+# Verify deployment
+npx supabase functions list
+```
+
+**Expected Output:**
+```
+✓ duitku-checkout (deployed)
+✓ duitku-callback (deployed)
+```
+
+#### 2.3 Set Environment Variables/Secrets
+```bash
+# CRITICAL: Set ENVIRONMENT to production
+npx supabase secrets set ENVIRONMENT=production
+
+# Duitku credentials
+npx supabase secrets set DUITKU_MERCHANT_CODE=D20919
+npx supabase secrets set DUITKU_API_KEY=17d9d5e20fbf4763a44c41a1e95cb7cb
+
+# Callback & Return URLs
+npx supabase secrets set DUITKU_CALLBACK_URL=https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback
+npx supabase secrets set DUITKU_RETURN_URL=https://www.oasis-bi-pro.web.id/payment/success
+
+# Supabase Service Role Key (untuk database access)
+npx supabase secrets set SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqemR6a2R3dHNzenFqdnhlaXF2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTA1ODU4NSwiZXhwIjoyMDgwNjM0NTg1fQ.jAnvDikr2-KoswgnWUSeIK5sGxDb5DqlmZpQeU32jAs
+
+# Verify all secrets set correctly
+npx supabase secrets list
+```
+
+**Expected Output:**
+```
+NAME                          VALUE (REDACTED)
+ENVIRONMENT                   pro***tion
+DUITKU_MERCHANT_CODE          D20***
+DUITKU_API_KEY                17d***7cb
+DUITKU_CALLBACK_URL           https://qjzdzkdwtsszqjvxeiqv...
+DUITKU_RETURN_URL             https://www.oasis-bi-pro.web.id...
+SUPABASE_SERVICE_ROLE_KEY     eyJ***jAs
+```
+
+#### 2.4 Test Edge Functions
+```bash
+# Test duitku-checkout
+curl -X POST https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-checkout \
   -H "Content-Type: application/json" \
+  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqemR6a2R3dHNzenFqdnhlaXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNTg1ODUsImV4cCI6MjA4MDYzNDU4NX0.4dMXUCL4ApROfQnQsvV3FtEcWo2-8P5L-dTQkSD0X7I" \
   -d '{
-    "planId": "starter",
+    "planId": "professional",
     "email": "test@example.com",
-    "phoneNumber": "08123456789",
+    "phoneNumber": "081234567890",
     "customerName": "Test User"
   }'
 ```
@@ -137,153 +152,373 @@ curl -X POST https://www.oasis-bi-pro.web.id/api/duitku/checkout \
 {
   "success": true,
   "data": {
-    "paymentUrl": "https://payment.duitku.com/...",
-    "reference": "DUITKU-REF-...",
-    "merchantOrderId": "OASIS-STARTER-...",
-    "amount": 99000,
-    "planName": "Starter Plan"
+    "reference": "DXXXXX...",
+    "paymentUrl": "https://app-prod.duitku.com/redirect_checkout?reference=...",
+    "orderId": "OASIS-...",
+    "amount": 100000,
+    "merchantCode": "D20919"
   }
 }
 ```
 
-**✅ Jika berhasil:** User akan di-redirect ke halaman Duitku Production (`https://payment.duitku.com/...`)
-
-**❌ Jika masih error:**
-- Periksa log deployment di Vercel/Netlify dashboard
-- Verifikasi semua Environment Variables sudah di-set dengan benar
-- Pastikan URL callback dan return sudah terdaftar di Duitku Dashboard
-
-### Test 3: Real Transaction Test (CRITICAL!)
-
-1. **Akses website production:** https://www.oasis-bi-pro.web.id
-2. **Pilih paket termurah** (Starter - Rp 99.000)
-3. **Isi form checkout** dengan data asli
-4. **Klik "Checkout"**
-5. **VERIFIKASI 1:** Apakah Anda di-redirect ke halaman pembayaran Duitku resmi?
-   - URL harus: `https://payment.duitku.com/...`
-   - Bukan: `https://app-sandbox.duitku.com/...`
-6. **VERIFIKASI 2:** Apakah semua metode pembayaran tersedia?
-   - Virtual Account (BCA, Mandiri, BNI, dll)
-   - E-Wallet (DANA, OVO, GoPay, dll)
-   - QRIS
-   - Credit Card
-   - Retail (Alfamart, Indomaret)
-7. **Lanjutkan pembayaran** (gunakan metode yang paling mudah)
-8. **VERIFIKASI 3:** Setelah pembayaran berhasil:
-   - Apakah status di database Supabase berubah menjadi "ACTIVE"?
-   - Apakah user mendapat email konfirmasi?
-   - Apakah callback dari Duitku tercatat di log?
-
 ---
 
-## 🔍 DEBUGGING TIPS
+### **PHASE 3: Frontend Deployment (Vercel)**
 
-### Jika masih muncul HTTP 500:
+#### 3.1 Set Environment Variables in Vercel
+Login ke Vercel dashboard: https://vercel.com
 
-1. **Cek Environment Variables:**
+**Navigate to:** Project Settings → Environment Variables
+
+**Add these variables for PRODUCTION environment:**
+
 ```bash
-# Di Vercel CLI
-vercel env ls
+# Environment
+NEXT_PUBLIC_ENVIRONMENT=production
 
-# Di Netlify CLI
-netlify env:list
+# Duitku Production Configuration
+NEXT_PUBLIC_DUITKU_MERCHANT_CODE=D20919
+NEXT_PUBLIC_DUITKU_API_URL=https://api-prod.duitku.com/api/merchant
+NEXT_PUBLIC_DUITKU_CHECKOUT_URL=https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-checkout
+NEXT_PUBLIC_DUITKU_CALLBACK_URL=https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback
+NEXT_PUBLIC_DUITKU_RETURN_URL=https://www.oasis-bi-pro.web.id/payment/success
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://qjzdzkdwtsszqjvxeiqv.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqemR6a2R3dHNzenFqdnhlaXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNTg1ODUsImV4cCI6MjA4MDYzNDU4NX0.4dMXUCL4ApROfQnQsvV3FtEcWo2-8P5L-dTQkSD0X7I
+
+# Website URL
+NEXT_PUBLIC_SITE_URL=https://www.oasis-bi-pro.web.id
 ```
 
-2. **Cek Runtime Logs:**
+**IMPORTANT:** Set environment ke **Production** untuk setiap variable!
+
+#### 3.2 Deploy to Vercel
 ```bash
-# Di Vercel
-vercel logs
+cd /home/user/webapp
 
-# Di Netlify
-netlify logs
+# Build project first
+npm run build
+
+# Deploy to production
+vercel --prod
+
+# Or push to main branch (if auto-deploy enabled)
+git push origin main
 ```
 
-3. **Cek Network Request di Browser:**
-- Buka Developer Tools (F12)
-- Tab: Network
-- Filter: Fetch/XHR
-- Klik request ke `/api/duitku/checkout`
-- Periksa Request Headers, Request Payload, dan Response
-
-### Jika Duitku API mengembalikan 401 Unauthorized:
-
-1. **Verifikasi Signature Generation:**
-   - Formula: `SHA256(merchantCode + timestamp + apiKey)`
-   - Timestamp harus dalam **milliseconds** (13 digit)
-   - API Key harus sama dengan yang di Duitku Dashboard
-
-2. **Periksa Duitku Dashboard:**
-   - Login: https://passport.duitku.com/weblogin
-   - Verifikasi Merchant Code: `D20919`
-   - Verifikasi API Key: `17d9d5e20fbf4763a44c41a1e95cb7cb`
-   - Pastikan akun sudah di-approve untuk Production
-
-### Jika Callback tidak masuk ke database:
-
-1. **Verifikasi Callback URL di Duitku Dashboard:**
-   - URL: `https://www.oasis-bi-pro.web.id/api/duitku/callback`
-   - Method: POST
-   - Format: JSON
-
-2. **Periksa Log Callback:**
+#### 3.3 Verify Deployment
 ```bash
-# Tambahkan console.log di /app/api/duitku/callback/route.ts
-console.log('📥 Callback received:', request.body)
+# Check deployment status
+vercel ls
+
+# Open production URL
+vercel open
+```
+
+**Expected URL:** https://www.oasis-bi-pro.web.id
+
+---
+
+### **PHASE 4: Testing Production Flow**
+
+#### 4.1 Pre-Flight Checks
+Before testing with real money:
+
+- [ ] ✅ Supabase edge functions deployed and running
+- [ ] ✅ All environment variables set correctly
+- [ ] ✅ Duitku dashboard callback URL configured
+- [ ] ✅ Frontend deployed to Vercel
+- [ ] ✅ Database tables exist (transactions, subscriptions)
+- [ ] ✅ Backup database before testing
+
+#### 4.2 Test Checkout Flow (WITHOUT Real Payment)
+```bash
+# Open browser
+https://www.oasis-bi-pro.web.id/checkout?plan=starter
+
+# Complete checkout form:
+# - Name: Test User Production
+# - Email: your-email@example.com
+# - Phone: 081234567890
+
+# Click "Proses Pembayaran"
+
+# Expected behavior:
+# 1. Duitku Pop overlay muncul
+# 2. Pilih metode pembayaran
+# 3. Halaman pembayaran Duitku production terbuka
+# 4. JANGAN LAKUKAN PEMBAYARAN DULU!
+# 5. Close halaman untuk cancel
+```
+
+#### 4.3 Monitor Logs
+```bash
+# Terminal 1: Watch Supabase logs (duitku-checkout)
+npx supabase functions logs duitku-checkout --follow
+
+# Terminal 2: Watch Supabase logs (duitku-callback)
+npx supabase functions logs duitku-callback --follow
+
+# Terminal 3: Check database
+psql -h qjzdzkdwtsszqjvxeiqv.supabase.co -U postgres -d postgres
+SELECT * FROM transactions ORDER BY created_at DESC LIMIT 5;
+```
+
+#### 4.4 Test Small Real Payment (OPTIONAL)
+⚠️ **WARNING:** This will process REAL payment!
+
+```bash
+# Test dengan amount terkecil (Rp 10,000)
+# Gunakan kartu kredit/debit REAL Anda
+# Monitor logs real-time
+
+# After payment SUCCESS:
+# 1. Check Supabase logs (duitku-callback)
+# 2. Check transactions table (status should be SUCCESS)
+# 3. Check subscriptions table (should be activated)
+# 4. Check Duitku dashboard (transaction should appear)
 ```
 
 ---
 
-## 📊 COMMIT HISTORY
+### **PHASE 5: Monitoring & Verification**
 
-**Latest Commit:**
-```
-commit b57d7fa
-Author: System
-Date: 2025-12-11
+#### 5.1 Check Supabase Logs
+```bash
+# Real-time monitoring
+npx supabase functions logs duitku-callback --follow
 
-FIX: Duitku Production URL format and Go Live Configuration
+# View recent logs
+npx supabase functions logs duitku-callback
 
-- Fixed ENOTFOUND error by updating Production API URL
-- Updated DUITKU_CONFIG with Production credentials (D20919)
-- Made check-status route defensive against missing Supabase config
-- Added .env.production.example for deployment reference
-- Build tested successfully ✅
+# Filter for errors
+npx supabase functions logs duitku-callback | grep ERROR
 ```
 
+**Look for:**
+- ✅ `✅ Payment SUCCESS (Result Code: 00)`
+- ✅ `✅ Signature verified successfully (MD5)`
+- ✅ `💾 Transaction updated`
+- ✅ `🎉 Subscription activated successfully`
+
+#### 5.2 Check Database
+```sql
+-- Check recent transactions
+SELECT 
+  order_id, 
+  status, 
+  amount, 
+  customer_email, 
+  created_at,
+  payment_confirmed_at
+FROM transactions 
+ORDER BY created_at DESC 
+LIMIT 10;
+
+-- Check active subscriptions
+SELECT 
+  user_email, 
+  plan_type, 
+  status, 
+  start_date, 
+  end_date, 
+  is_active
+FROM subscriptions 
+WHERE is_active = true
+ORDER BY start_date DESC;
+```
+
+#### 5.3 Check Duitku Dashboard
+Login: https://passport.duitku.com
+
+**Navigate to:** Transactions → Transaction History
+
+**Verify:**
+- ✅ Transaction appears in dashboard
+- ✅ Status matches database (SUCCESS/PENDING/FAILED)
+- ✅ Amount correct
+- ✅ Settlement scheduled
+
+#### 5.4 Check Website Frontend
+Test full user flow:
+
+1. **Access checkout:** https://www.oasis-bi-pro.web.id/checkout?plan=professional
+2. **Fill form:** Name, email, phone
+3. **Select payment method**
+4. **Complete payment** (if testing with real payment)
+5. **Verify redirect:** Should go to `/payment/success`
+6. **Check email:** Should receive confirmation (if configured)
+
 ---
 
-## 🎯 NEXT STEPS
+## 🔐 Security Checklist
 
-1. ✅ **Deploy ke Production** (Vercel/Netlify)
-2. ✅ **Set Environment Variables** di platform hosting
-3. ✅ **Test Real Transaction** dengan uang asli
-4. ⏳ **Monitor First 24 Hours** untuk error atau anomali
-5. ⏳ **Update Duitku Dashboard** dengan logo dan branding
-6. ⏳ **Request Email Notifications** dari Duitku untuk transaksi
+Before going live, ensure:
 
----
-
-## 📞 SUPPORT
-
-Jika Anda mengalami masalah selama deployment:
-1. Cek log runtime di Vercel/Netlify
-2. Verifikasi semua Environment Variables
-3. Test dengan tool seperti Postman atau cURL
-4. Hubungi Duitku Support jika ada masalah dengan API mereka
+- [ ] ✅ `.env.production` NOT committed to Git
+- [ ] ✅ API keys stored as Vercel/Supabase secrets (not hardcoded)
+- [ ] ✅ Callback URL uses HTTPS (not HTTP)
+- [ ] ✅ Signature verification enabled (MD5 for callback)
+- [ ] ✅ CORS configured properly in edge functions
+- [ ] ✅ Service role key only used server-side
+- [ ] ✅ Rate limiting enabled (if available)
+- [ ] ✅ Error logging configured
+- [ ] ✅ Monitoring/alerts set up
 
 ---
 
-## ⚠️ IMPORTANT NOTES
+## 🐛 Troubleshooting
 
-1. **API Key adalah SECRET** - jangan pernah commit ke repository
-2. **Production URL format berbeda** dengan Sandbox URL
-3. **Test dengan uang asli** di Staging/Preview environment dulu
-4. **Callback URL harus HTTPS** dan accessible dari internet
-5. **Signature harus menggunakan SHA256** dengan timestamp milliseconds
+### Problem: Edge Function Returns 500 Error
+**Solution:**
+```bash
+# Check logs
+npx supabase functions logs duitku-checkout
+
+# Common causes:
+# 1. Environment variables not set
+# 2. Wrong API endpoint
+# 3. Invalid API key
+# 4. Supabase service role key missing
+
+# Fix: Re-deploy with correct secrets
+npx supabase secrets set ENVIRONMENT=production
+npx supabase functions deploy duitku-checkout --no-verify-jwt
+```
+
+### Problem: Callback Not Received
+**Solution:**
+```bash
+# 1. Check Duitku dashboard callback URL
+#    Must be: https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback
+
+# 2. Test callback manually
+curl -X POST https://qjzdzkdwtsszqjvxeiqv.supabase.co/functions/v1/duitku-callback \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "merchantCode=D20919" \
+  -d "amount=100000" \
+  -d "merchantOrderId=TEST-123" \
+  -d "signature=CALCULATE_MD5" \
+  -d "resultCode=00"
+
+# 3. Check callback logs
+npx supabase functions logs duitku-callback --follow
+```
+
+### Problem: Signature Mismatch
+**Solution:**
+```bash
+# Formula: MD5(merchantCode + amount + merchantOrderId + apiKey)
+# Example:
+# merchantCode: D20919
+# amount: 100000
+# merchantOrderId: OASIS-123
+# apiKey: 17d9d5e20fbf4763a44c41a1e95cb7cb
+
+# Concatenate: D20919100000OASIS-12317d9d5e20fbf4763a44c41a1e95cb7cb
+# MD5 Hash: [calculate using online tool]
+
+# Verify:
+# 1. Check logs for signature comparison
+# 2. Ensure API key correct in Supabase secrets
+# 3. Test with MD5 calculator: https://www.md5hashgenerator.com/
+```
+
+### Problem: Duitku Pop JS Not Loading
+**Solution:**
+```javascript
+// Check browser console for errors
+// Verify script URL in page source:
+
+// PRODUCTION (correct):
+<script src="https://app-prod.duitku.com/lib/js/duitku.js"></script>
+
+// SANDBOX (wrong for production):
+<script src="https://app-sandbox.duitku.com/lib/js/duitku.js"></script>
+
+// Fix: Ensure NEXT_PUBLIC_ENVIRONMENT=production in Vercel
+```
 
 ---
 
-**Status:** ✅ READY FOR PRODUCTION DEPLOYMENT
-**Last Updated:** 2025-12-11
-**Build Status:** ✅ Successful
-**GitHub Push:** ✅ Successful (commit b57d7fa)
+## 📊 Production Monitoring Dashboard
+
+### Real-Time Metrics to Monitor
+
+1. **Transaction Success Rate**
+   - Target: >95% success rate
+   - Monitor: Supabase transactions table
+
+2. **Callback Response Time**
+   - Target: <500ms response
+   - Monitor: Supabase function logs
+
+3. **Payment Failures**
+   - Alert on: Any signature mismatch
+   - Monitor: Error logs in Supabase
+
+4. **Database Performance**
+   - Monitor: Query execution time
+   - Alert on: Slow queries (>1s)
+
+---
+
+## 🎯 Post-Deployment Checklist
+
+After successful production deployment:
+
+- [ ] ✅ Test full payment flow with small amount
+- [ ] ✅ Verify callback received and processed
+- [ ] ✅ Confirm database updates correct
+- [ ] ✅ Check subscription activation
+- [ ] ✅ Test multiple payment methods
+- [ ] ✅ Monitor for 24 hours
+- [ ] ✅ Set up alerting for errors
+- [ ] ✅ Document any issues encountered
+- [ ] ✅ Train team on monitoring procedures
+- [ ] ✅ Prepare rollback plan if needed
+
+---
+
+## 📚 Reference Links
+
+- **Duitku Documentation:** https://docs.duitku.com/pop/en/
+- **Duitku Dashboard:** https://passport.duitku.com
+- **Supabase Dashboard:** https://supabase.com/dashboard/project/qjzdzkdwtsszqjvxeiqv
+- **Vercel Dashboard:** https://vercel.com
+- **Production Website:** https://www.oasis-bi-pro.web.id
+- **GitHub Repository:** https://github.com/Estes786/v0-v0oasisbiproduitkuv21mainmain-02-main-3-1-main-1-5-new
+
+---
+
+## 🆘 Support & Emergency Contacts
+
+- **Duitku Support:** cs@duitku.com
+- **Duitku Live Chat:** https://dashboard.duitku.com (dashboard)
+- **Supabase Support:** https://supabase.com/support
+- **Project Documentation:** `/home/user/webapp/DUITKU_CALLBACK_FIX_v2.md`
+
+---
+
+## ✅ Success Criteria
+
+Production deployment is successful when:
+
+1. ✅ Edge functions deployed and running
+2. ✅ Environment variables all set to production
+3. ✅ Real payment flow completes end-to-end
+4. ✅ Callback received and processed correctly
+5. ✅ Database updated with transaction data
+6. ✅ Subscription activated automatically
+7. ✅ Monitoring and logs working
+8. ✅ No errors in production logs
+9. ✅ Duitku dashboard shows transaction
+10. ✅ User receives confirmation (frontend)
+
+---
+
+**Version:** 3.0 (Production Ready)  
+**Date:** 2024-12-12  
+**Status:** ✅ READY FOR PRODUCTION DEPLOYMENT  
+**Environment:** 🔴 PRODUCTION (LIVE PAYMENTS)

@@ -3,7 +3,8 @@
 // ============================================================================
 // Purpose: Create Duitku payment invoice untuk Pop integration
 // Documentation: https://docs.duitku.com/pop/en/
-// Fixed: API endpoint, signature, parameters sesuai dokumentasi resmi
+// Environment: PRODUCTION & SANDBOX supported
+// Version: 3.0 (Production Ready)
 // ============================================================================
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -317,6 +318,13 @@ serve(async (req) => {
   }
 })
 
-console.log('✅ Duitku Checkout Edge Function is running')
-console.log('   Environment:', Deno.env.get('ENVIRONMENT') || 'sandbox')
+console.log('✅ Duitku Checkout Edge Function is running (v3.0 - Production Ready)')
+console.log('   Environment:', ENVIRONMENT)
+console.log('   Mode:', IS_PRODUCTION ? '🔴 PRODUCTION (LIVE)' : '🟡 SANDBOX (TEST)')
+console.log('   Merchant Code:', DUITKU_MERCHANT_CODE)
 console.log('   API URL:', DUITKU_API_URL)
+console.log('   Callback URL:', CALLBACK_URL)
+console.log('   Return URL:', RETURN_URL)
+console.log('')
+console.log('   ⚠️  WARNING: PRODUCTION mode will process REAL payments!')
+console.log('   📚 Documentation: https://docs.duitku.com/pop/en/')

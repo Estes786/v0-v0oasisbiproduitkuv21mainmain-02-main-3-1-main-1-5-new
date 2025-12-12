@@ -3,8 +3,8 @@
 // ============================================================================
 // Purpose: Handle payment notifications from Duitku
 // Documentation: https://docs.duitku.com/pop/en/#callback
-// Fixed: MD5 signature verification with optimized implementation
-// Version: 2.0 (Optimized with single crypto-js import)
+// Environment: PRODUCTION & SANDBOX supported
+// Version: 3.0 (Production Ready with optimized MD5)
 // ============================================================================
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -14,9 +14,15 @@ import CryptoJS from 'https://esm.sh/crypto-js@4.2.0'
 // ============================================================================
 // CONFIGURATION & CREDENTIALS
 // ============================================================================
+// Environment detection
+const ENVIRONMENT = Deno.env.get('ENVIRONMENT') || 'sandbox'
+const IS_PRODUCTION = ENVIRONMENT === 'production'
+
+// Duitku credentials
 const DUITKU_MERCHANT_CODE = Deno.env.get('DUITKU_MERCHANT_CODE') || 'D20919'
 const DUITKU_API_KEY = Deno.env.get('DUITKU_API_KEY') || '17d9d5e20fbf4763a44c41a1e95cb7cb'
 
+// Supabase configuration
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 
   'https://qjzdzkdwtsszqjvxeiqv.supabase.co'
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -292,9 +298,12 @@ serve(async (req) => {
   }
 })
 
-console.log('✅ Duitku Callback Edge Function is running (v2.0 - Optimized)')
+console.log('✅ Duitku Callback Edge Function is running (v3.0 - Production Ready)')
+console.log('   Environment:', ENVIRONMENT)
+console.log('   Mode:', IS_PRODUCTION ? '🔴 PRODUCTION (LIVE)' : '🟡 SANDBOX (TEST)')
 console.log('   Merchant Code:', DUITKU_MERCHANT_CODE)
-console.log('   Signature Method: MD5 (crypto-js)')
-console.log('   Environment:', Deno.env.get('ENVIRONMENT') || 'sandbox')
+console.log('   Signature Method: MD5 (crypto-js - optimized)')
 console.log('   Formula: MD5(merchantCode + amount + merchantOrderId + merchantKey)')
-console.log('   Documentation: https://docs.duitku.com/pop/en/#callback')
+console.log('')
+console.log('   ⚠️  WARNING: PRODUCTION mode processes REAL payment callbacks!')
+console.log('   📚 Documentation: https://docs.duitku.com/pop/en/#callback')
