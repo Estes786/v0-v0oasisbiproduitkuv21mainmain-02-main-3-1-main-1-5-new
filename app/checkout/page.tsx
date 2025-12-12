@@ -39,25 +39,24 @@ function CheckoutContent() {
     setLoadingMethods(true);
     try {
       // Hardcoded payment methods (Duitku common methods)
-      // In production, you can fetch from Edge Function if needed
+      // Format yang benar sesuai dengan kode di step 3
       const commonMethods = [
-        { code: 'VC', name: 'Credit Card (Visa/Mastercard)', fee: 0, image: '/icons/visa.png' },
-        { code: 'BC', name: 'BCA Virtual Account', fee: 4000, image: '/icons/bca.png' },
-        { code: 'M2', name: 'Mandiri Virtual Account', fee: 4000, image: '/icons/mandiri.png' },
-        { code: 'BN', name: 'BNI Virtual Account', fee: 4000, image: '/icons/bni.png' },
-        { code: 'BR', name: 'BRI Virtual Account', fee: 4000, image: '/icons/bri.png' },
-        { code: 'I1', name: 'BCA KlikPay', fee: 0, image: '/icons/bca.png' },
-        { code: 'AG', name: 'Bank Mandiri Bill Payment', fee: 4000, image: '/icons/mandiri.png' },
-        { code: 'OV', name: 'OVO', fee: 0, image: '/icons/ovo.png' },
-        { code: 'SA', name: 'Shopee Pay', fee: 0, image: '/icons/shopee.png' },
-        { code: 'LF', name: 'LinkAja', fee: 0, image: '/icons/linkaja.png' },
-        { code: 'DA', name: 'DANA', fee: 0, image: '/icons/dana.png' },
-        { code: 'SP', name: 'ShopeePay', fee: 0, image: '/icons/shopee.png' },
+        { paymentMethod: 'BV', paymentName: 'BCA Virtual Account', paymentFee: 4000, paymentImage: '/icons/bca.png' },
+        { paymentMethod: 'MV', paymentName: 'Mandiri Virtual Account', paymentFee: 4000, paymentImage: '/icons/mandiri.png' },
+        { paymentMethod: 'NV', paymentName: 'BNI Virtual Account', paymentFee: 4000, paymentImage: '/icons/bni.png' },
+        { paymentMethod: 'BRV', paymentName: 'BRI Virtual Account', paymentFee: 4000, paymentImage: '/icons/bri.png' },
+        { paymentMethod: 'PV', paymentName: 'Permata Virtual Account', paymentFee: 4000, paymentImage: '/icons/permata.png' },
+        { paymentMethod: 'OV', paymentName: 'OVO', paymentFee: 0, paymentImage: '/icons/ovo.png' },
+        { paymentMethod: 'DA', paymentName: 'DANA', paymentFee: 0, paymentImage: '/icons/dana.png' },
+        { paymentMethod: 'SP', paymentName: 'ShopeePay', paymentFee: 0, paymentImage: '/icons/shopee.png' },
+        { paymentMethod: 'LF', paymentName: 'LinkAja', paymentFee: 0, paymentImage: '/icons/linkaja.png' },
+        { paymentMethod: 'CC', paymentName: 'Credit Card (Visa/Mastercard)', paymentFee: 0, paymentImage: '/icons/visa.png' },
+        { paymentMethod: 'NQ', paymentName: 'QRIS', paymentFee: 0, paymentImage: '/icons/qris.png' },
       ];
       setPaymentMethods(commonMethods);
       // Select first method by default
       if (commonMethods.length > 0) {
-        setSelectedPaymentMethod(commonMethods[0].code);
+        setSelectedPaymentMethod(commonMethods[0].paymentMethod);
       }
     } catch (error) {
       console.error('Failed to load payment methods:', error);
