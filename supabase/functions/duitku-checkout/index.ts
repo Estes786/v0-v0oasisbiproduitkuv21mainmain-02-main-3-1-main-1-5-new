@@ -323,7 +323,7 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('💥 GENERAL ERROR:', error)
+    console.log('💥 GENERAL ERROR:', error)
     
     return new Response(
       JSON.stringify({ 
