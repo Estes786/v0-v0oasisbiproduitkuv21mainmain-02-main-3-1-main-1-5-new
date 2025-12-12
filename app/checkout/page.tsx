@@ -38,8 +38,27 @@ function CheckoutContent() {
     
     setLoadingMethods(true);
     try {
-      const response = await axios.get(`/api/duitku/payment-methods?amount=${plan.price}`);
-      setPaymentMethods(response.data.paymentMethods || []);
+      // Hardcoded payment methods (Duitku common methods)
+      // In production, you can fetch from Edge Function if needed
+      const commonMethods = [
+        { code: 'VC', name: 'Credit Card (Visa/Mastercard)', fee: 0, image: '/icons/visa.png' },
+        { code: 'BC', name: 'BCA Virtual Account', fee: 4000, image: '/icons/bca.png' },
+        { code: 'M2', name: 'Mandiri Virtual Account', fee: 4000, image: '/icons/mandiri.png' },
+        { code: 'BN', name: 'BNI Virtual Account', fee: 4000, image: '/icons/bni.png' },
+        { code: 'BR', name: 'BRI Virtual Account', fee: 4000, image: '/icons/bri.png' },
+        { code: 'I1', name: 'BCA KlikPay', fee: 0, image: '/icons/bca.png' },
+        { code: 'AG', name: 'Bank Mandiri Bill Payment', fee: 4000, image: '/icons/mandiri.png' },
+        { code: 'OV', name: 'OVO', fee: 0, image: '/icons/ovo.png' },
+        { code: 'SA', name: 'Shopee Pay', fee: 0, image: '/icons/shopee.png' },
+        { code: 'LF', name: 'LinkAja', fee: 0, image: '/icons/linkaja.png' },
+        { code: 'DA', name: 'DANA', fee: 0, image: '/icons/dana.png' },
+        { code: 'SP', name: 'ShopeePay', fee: 0, image: '/icons/shopee.png' },
+      ];
+      setPaymentMethods(commonMethods);
+      // Select first method by default
+      if (commonMethods.length > 0) {
+        setSelectedPaymentMethod(commonMethods[0].code);
+      }
     } catch (error) {
       console.error('Failed to load payment methods:', error);
       alert('Gagal memuat metode pembayaran. Silakan coba lagi.');
