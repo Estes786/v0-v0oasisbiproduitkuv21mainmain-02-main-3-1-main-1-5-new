@@ -3,12 +3,13 @@
 // ============================================================================
 // Purpose: Handle payment notifications from Duitku
 // Documentation: https://docs.duitku.com/pop/en/#callback
-// Fixed: MD5 signature verification sesuai dokumentasi resmi
+// Fixed: MD5 signature verification with optimized implementation
+// Version: 2.0 (Optimized with single crypto-js import)
 // ============================================================================
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0'
-import { Md5 } from 'https://deno.land/std@0.168.0/hash/md5.ts'
+import CryptoJS from 'https://esm.sh/crypto-js@4.2.0'
 
 // ============================================================================
 // CONFIGURATION & CREDENTIALS
@@ -21,20 +22,25 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ||
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
 // ============================================================================
-// MD5 SIGNATURE GENERATOR (for callback verification)
-// Documentation: MD5(merchantCode + amount + merchantOrderId + apiKey)
+// MD5 HASH FUNCTION (for callback signature verification)
+// Documentation: MD5(merchantCode + amount + merchantOrderId + merchantKey)
 // CRITICAL: Callback uses MD5, NOT SHA256!
+// Formula dari dokumentasi resmi Duitku: https://docs.duitku.com/pop/en/#callback
 // ============================================================================
 function generateCallbackSignature(
   merchantCode: string,
   amount: string,
   merchantOrderId: string,
-  apiKey: string
+  merchantKey: string
 ): string {
-  const signatureString = merchantCode + amount + merchantOrderId + apiKey
-  const md5 = new Md5()
-  md5.update(signatureString)
-  return md5.toString()
+  // Concatenate parameters sesuai formula Duitku
+  const signatureString = `${merchantCode}${amount}${merchantOrderId}${merchantKey}`
+  
+  // Generate MD5 hash
+  const hash = CryptoJS.MD5(signatureString)
+  
+  // Return as hexadecimal string (lowercase)
+  return hash.toString(CryptoJS.enc.Hex).toLowerCase()
 }
 
 // ============================================================================
@@ -68,7 +74,7 @@ serve(async (req) => {
   try {
     console.log('📞 CALLBACK RECEIVED FROM DUITKU')
     
-    // Parse callback data (form-urlencoded)
+    // Parse callback data (form-urlencoded OR JSON)
     const contentType = req.headers.get('content-type') || ''
     let callbackData: any = {}
 
@@ -81,12 +87,17 @@ serve(async (req) => {
       console.log('📋 Parsed JSON data')
     } else {
       console.warn('⚠️ Unexpected content-type:', contentType)
-      // Try parsing as JSON anyway
+      // Try parsing as JSON first, then form data
       try {
         callbackData = await req.json()
       } catch {
-        const formData = await req.formData()
-        callbackData = Object.fromEntries(formData)
+        try {
+          const formData = await req.formData()
+          callbackData = Object.fromEntries(formData)
+        } catch (parseError) {
+          console.error('❌ Failed to parse request body:', parseError)
+          return new Response('Invalid request body', { status: 400 })
+        }
       }
     }
 
@@ -112,7 +123,8 @@ serve(async (req) => {
     // Validate required fields
     if (!merchantCode || !amount || !merchantOrderId || !signature || !resultCode) {
       console.error('❌ Missing required callback fields')
-      console.error('   Received:', Object.keys(callbackData))
+      console.error('   Required: merchantCode, amount, merchantOrderId, signature, resultCode')
+      console.error('   Received fields:', Object.keys(callbackData))
       return new Response('Missing required fields', { status: 400 })
     }
 
@@ -126,6 +138,7 @@ serve(async (req) => {
     console.log('✅ Merchant code verified')
 
     // 2. VERIFY SIGNATURE (MD5)
+    // Generate expected signature using exact same formula as Duitku
     const localSignature = generateCallbackSignature(
       merchantCode,
       amount,
@@ -133,52 +146,63 @@ serve(async (req) => {
       DUITKU_API_KEY
     )
 
-    if (localSignature !== signature) {
-      console.error('❌ Invalid signature (MD5)')
+    console.log('🔐 Signature verification:')
+    console.log('   Formula: MD5(merchantCode + amount + merchantOrderId + merchantKey)')
+    console.log('   Merchant Code:', merchantCode)
+    console.log('   Amount:', amount)
+    console.log('   Order ID:', merchantOrderId)
+    console.log('   Input concatenated: ' + merchantCode + amount + merchantOrderId + '[MERCHANT_KEY_HIDDEN]')
+    console.log('   Expected (local):', localSignature)
+    console.log('   Received (Duitku):', signature)
+
+    // Compare signatures (case-insensitive)
+    const receivedSignature = String(signature).toLowerCase().trim()
+    if (localSignature !== receivedSignature) {
+      console.error('❌ SIGNATURE MISMATCH!')
       console.error('   Expected:', localSignature)
-      console.error('   Received:', signature)
-      console.error('   Formula: MD5(merchantCode + amount + merchantOrderId + apiKey)')
-      console.error('   Values:', {
-        merchantCode,
-        amount,
-        merchantOrderId,
-        apiKeyLength: DUITKU_API_KEY.length
-      })
+      console.error('   Received:', receivedSignature)
+      console.error('   Length expected:', localSignature.length)
+      console.error('   Length received:', receivedSignature.length)
       return new Response('Invalid signature', { status: 400 })
     }
-    console.log('✅ Signature verified (MD5)')
+    console.log('✅ Signature verified successfully (MD5)')
 
     // 3. DETERMINE PAYMENT STATUS
+    // Dokumentasi: 00 = Success, 02 = Failed (tidak ada 01 di callback)
     let newStatus = 'PENDING'
     let paymentSuccess = false
 
-    switch (resultCode) {
+    const resultCodeStr = String(resultCode).trim()
+    
+    switch (resultCodeStr) {
       case '00':
         newStatus = 'SUCCESS'
         paymentSuccess = true
-        console.log('✅ Payment SUCCESS')
+        console.log('✅ Payment SUCCESS (Result Code: 00)')
         break
-      case '01':
-        newStatus = 'PENDING'
-        console.log('⏳ Payment PENDING')
+      case '02':
+        newStatus = 'FAILED'
+        console.log('❌ Payment FAILED (Result Code: 02)')
         break
       default:
+        // Any other result code is treated as FAILED
         newStatus = 'FAILED'
-        console.log('❌ Payment FAILED')
+        console.log('❌ Payment FAILED (Unknown Result Code: ' + resultCodeStr + ')')
         break
     }
 
     // 4. UPDATE DATABASE
     if (!SERVICE_ROLE_KEY) {
       console.error('⚠️ SERVICE_ROLE_KEY not configured')
-      return new Response('Server configuration error', { status: 500 })
+      // Still return 200 to prevent Duitku retries
+      return new Response('OK', { status: 200, headers: corsHeaders })
     }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: { persistSession: false }
     })
 
-    // Update transaction status
+    // Update transaction status in database
     const { data: transactionData, error: updateError } = await supabase
       .from('transactions')
       .update({
@@ -186,8 +210,8 @@ serve(async (req) => {
         payment_confirmed_at: new Date().toISOString(),
         is_paid: paymentSuccess,
         duitku_result_code: resultCode,
-        duitku_reference: reference || callbackData.reference,
-        payment_code: paymentCode || callbackData.paymentCode
+        duitku_reference: reference || '',
+        payment_code: paymentCode || ''
       })
       .eq('order_id', merchantOrderId)
       .select()
@@ -197,7 +221,8 @@ serve(async (req) => {
       console.error('❌ Database update failed:', updateError.message)
       console.error('   Order ID:', merchantOrderId)
       console.error('   Error details:', updateError)
-      return new Response('Database update failed', { status: 500 })
+      // Still return 200 to prevent Duitku retries
+      return new Response('OK', { status: 200, headers: corsHeaders })
     }
 
     console.log('💾 Transaction updated:', {
@@ -267,5 +292,9 @@ serve(async (req) => {
   }
 })
 
-console.log('✅ Duitku Callback Edge Function is running')
-console.log('   Signature verification: MD5')
+console.log('✅ Duitku Callback Edge Function is running (v2.0 - Optimized)')
+console.log('   Merchant Code:', DUITKU_MERCHANT_CODE)
+console.log('   Signature Method: MD5 (crypto-js)')
+console.log('   Environment:', Deno.env.get('ENVIRONMENT') || 'sandbox')
+console.log('   Formula: MD5(merchantCode + amount + merchantOrderId + merchantKey)')
+console.log('   Documentation: https://docs.duitku.com/pop/en/#callback')
