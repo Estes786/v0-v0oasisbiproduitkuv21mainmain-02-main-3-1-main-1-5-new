@@ -263,35 +263,56 @@ serve(async (req) => {
       console.log('   Reference:', duitkuData.reference)
       console.log('   Payment URL:', duitkuData.paymentUrl)
 
-      // Save transaction to database
+      // Save order and transaction to database
       if (SERVICE_ROLE_KEY) {
         try {
           const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
             auth: { persistSession: false }
           })
 
-          const { error: dbError } = await supabase
-            .from('transactions')
+          // First, create order
+          const { data: orderData, error: orderError } = await supabase
+            .from('orders')
             .insert({
-              gateway_reference: duitkuData.reference,
+              plan_type: planId,
               amount: plan.price,
               status: 'pending',
-              payment_gateway: 'duitku',
+              customer_name: customerName,
+              customer_email: email,
+              customer_phone: phoneNumber,
               metadata: {
                 order_id: orderId,
-                plan_type: planId,
-                customer_name: customerName,
-                customer_email: email,
-                customer_phone: phoneNumber,
                 payment_url: duitkuData.paymentUrl,
-              },
-              created_at: new Date().toISOString()
+              }
             })
+            .select()
+            .single()
 
-          if (dbError) {
-            console.error('⚠️ Database insert failed:', dbError.message)
+          if (orderError) {
+            console.error('⚠️ Order insert failed:', orderError.message)
           } else {
-            console.log('💾 Transaction saved to database')
+            console.log('💾 Order created with ID:', orderData.id)
+
+            // Then, create transaction linked to order
+            const { error: txError } = await supabase
+              .from('transactions')
+              .insert({
+                order_id: orderData.id,
+                merchant_order_id: orderId,
+                reference: duitkuData.reference,
+                amount: plan.price,
+                payment_method: 'duitku',
+                payment_method_name: 'Duitku Payment Gateway',
+                status: 'pending',
+                payment_url: duitkuData.paymentUrl,
+                expired_at: new Date(Date.now() + 60 * 60 * 1000).toISOString() // 60 minutes
+              })
+
+            if (txError) {
+              console.error('⚠️ Transaction insert failed:', txError.message)
+            } else {
+              console.log('💾 Transaction saved to database')
+            }
           }
         } catch (dbError) {
           console.error('⚠️ Database error:', dbError)
