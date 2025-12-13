@@ -87,26 +87,6 @@ serve(async (req) => {
     )
   }
 
-    // Handle GET request (for health check and browser testing)
-  if (req.method === 'GET') {
-    console.log('🔍 GET request received (health check)')
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Duitku Callback endpoint is running',
-        version: '3.0',
-        environment: ENVIRONMENT,
-        mode: IS_PRODUCTION ? 'PRODUCTION' : 'SANDBOX',
-        acceptedMethods: ['POST'],
-        usage: 'POST payment callback data to this endpoint'
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-  }
-
   if (req.method !== 'POST') {
     return new Response(
      JSON.stringify({ success: false, error: 'Method not allowed. Use POST for callbacks.' }),
