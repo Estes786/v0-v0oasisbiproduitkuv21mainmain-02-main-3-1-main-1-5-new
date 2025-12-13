@@ -294,15 +294,18 @@ serve(async (req) => {
           const { error: dbError } = await supabase
             .from('transactions')
             .insert({
-              order_id: orderId,
-              plan_type: planId,
+              gateway_reference: duitkuData.reference,
               amount: plan.price,
-              customer_name: customerName,
-              customer_email: email,
-              customer_phone: phoneNumber,
-              status: 'PENDING',
-              payment_url: duitkuData.paymentUrl,
-              duitku_reference: duitkuData.reference,
+              status: 'pending',
+              payment_gateway: 'duitku',
+              metadata: {
+                order_id: orderId,
+                plan_type: planId,
+                customer_name: customerName,
+                customer_email: email,
+                customer_phone: phoneNumber,
+                payment_url: duitkuData.paymentUrl,
+              },
               created_at: new Date().toISOString()
             })
 
