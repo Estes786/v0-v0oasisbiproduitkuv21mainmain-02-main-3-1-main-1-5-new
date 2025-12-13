@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase-client'
+import OnboardingTour from '@/components/onboarding-tour'
 import {
   CreditCard,
   Package,
@@ -68,6 +69,28 @@ export default function MemberDashboardPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [metrics, setMetrics] = useState<DailyMetric[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  // Check if user is new (first time login) - check localStorage
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('oasis_onboarding_completed')
+    if (!hasSeenOnboarding) {
+      // Show onboarding after data loads
+      if (!loading && user) {
+        setTimeout(() => setShowOnboarding(true), 500)
+      }
+    }
+  }, [loading, user])
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('oasis_onboarding_completed', 'true')
+    setShowOnboarding(false)
+  }
+
+  const handleOnboardingSkip = () => {
+    localStorage.setItem('oasis_onboarding_completed', 'true')
+    setShowOnboarding(false)
+  }
 
   useEffect(() => {
     loadDashboardData()
@@ -260,9 +283,18 @@ export default function MemberDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      {/* Header with USER DATA */}
-      <div className="bg-white border-b-2 border-gray-200 shadow-md">
+    <>
+      {/* Onboarding Tour - shown on first login */}
+      {showOnboarding && (
+        <OnboardingTour
+          onComplete={handleOnboardingComplete}
+          onSkip={handleOnboardingSkip}
+        />
+      )}
+
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        {/* Header with USER DATA */}
+        <div className="bg-white border-b-2 border-gray-200 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
@@ -500,5 +532,6 @@ export default function MemberDashboardPage() {
         </div>
       </div>
     </div>
+    </>
   )
 }

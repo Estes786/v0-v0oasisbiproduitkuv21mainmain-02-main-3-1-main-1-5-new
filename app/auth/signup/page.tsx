@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase-client'
+import { Eye, EyeOff, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -16,6 +17,62 @@ export default function SignUpPage() {
     password: '',
     confirmPassword: ''
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState({
+    score: 0,
+    feedback: [] as string[],
+    color: 'red' as 'red' | 'yellow' | 'green'
+  })
+
+  // Password strength calculator
+  useEffect(() => {
+    if (!formData.password) {
+      setPasswordStrength({ score: 0, feedback: [], color: 'red' })
+      return
+    }
+
+    let score = 0
+    const feedback: string[] = []
+
+    // Length check
+    if (formData.password.length >= 8) {
+      score += 25
+    } else {
+      feedback.push('Minimal 8 karakter')
+    }
+
+    // Uppercase check
+    if (/[A-Z]/.test(formData.password)) {
+      score += 25
+    } else {
+      feedback.push('Minimal 1 huruf besar')
+    }
+
+    // Lowercase check
+    if (/[a-z]/.test(formData.password)) {
+      score += 25
+    } else {
+      feedback.push('Minimal 1 huruf kecil')
+    }
+
+    // Number check
+    if (/\d/.test(formData.password)) {
+      score += 25
+    } else {
+      feedback.push('Minimal 1 angka')
+    }
+
+    // Special character bonus
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      score += 10
+    }
+
+    const color: 'red' | 'yellow' | 'green' = 
+      score >= 75 ? 'green' : score >= 50 ? 'yellow' : 'red'
+
+    setPasswordStrength({ score: Math.min(score, 100), feedback, color })
+  }, [formData.password])
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,8 +86,15 @@ export default function SignUpPage() {
       return
     }
 
-    if (formData.password.length < 6) {
-      setError('Password minimal 6 karakter')
+    if (formData.password.length < 8) {
+      setError('Password minimal 8 karakter')
+      setLoading(false)
+      return
+    }
+
+    // Check password strength
+    if (passwordStrength.score < 50) {
+      setError('Password terlalu lemah. ' + passwordStrength.feedback.join(', '))
       setLoading(false)
       return
     }
@@ -127,28 +191,106 @@ export default function SignUpPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Minimal 6 karakter"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Minimal 8 karakter, huruf besar, kecil, angka"
+                  aria-label="Password"
+                  aria-describedby="password-strength"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              
+              {/* Password Strength Indicator */}
+              {formData.password && (
+                <div className="mt-2" id="password-strength">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          passwordStrength.color === 'green' ? 'bg-green-500' :
+                          passwordStrength.color === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${passwordStrength.score}%` }}
+                        role="progressbar"
+                        aria-valuenow={passwordStrength.score}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      />
+                    </div>
+                    <span className={`text-xs font-medium ${
+                      passwordStrength.color === 'green' ? 'text-green-600' :
+                      passwordStrength.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
+                    }`}>
+                      {passwordStrength.score >= 75 ? 'Kuat' : passwordStrength.score >= 50 ? 'Sedang' : 'Lemah'}
+                    </span>
+                  </div>
+                  {passwordStrength.feedback.length > 0 && (
+                    <ul className="text-xs text-gray-600 space-y-1" role="alert">
+                      {passwordStrength.feedback.map((item, idx) => (
+                        <li key={idx} className="flex items-center gap-1">
+                          <XCircle className="w-3 h-3 text-red-500" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {passwordStrength.score >= 75 && (
+                    <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                      <CheckCircle className="w-3 h-3" />
+                      Password kuat!
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Konfirmasi Password
               </label>
-              <input
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ulangi password"
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  required
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Ulangi password"
+                  aria-label="Confirm password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600 flex items-center gap-1" role="alert">
+                  <XCircle className="w-3 h-3" />
+                  Password tidak cocok
+                </p>
+              )}
+              {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  Password cocok
+                </p>
+              )}
             </div>
 
             <button
