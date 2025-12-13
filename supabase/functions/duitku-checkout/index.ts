@@ -111,9 +111,30 @@ serve(async (req) => {
     )
   }
 
+    // Handle GET request (for health check and browser testing)
+  if (req.method === 'GET') {
+    console.log('🔍 GET request received (health check)')
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Duitku Checkout endpoint is running',
+        version: '3.0',
+        environment: ENVIRONMENT,
+        mode: IS_PRODUCTION ? 'PRODUCTION' : 'SANDBOX',
+        acceptedMethods: ['POST'],
+        usage: 'POST checkout data: { planId, email, phoneNumber, customerName }',
+        availablePlans: Object.keys(PLANS)
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+  }
+
   if (req.method !== 'POST') {
     return new Response(
-      JSON.stringify({ success: false, error: 'Method not allowed. Use POST for checkout.' }),
+     JSON.stringify({ success: false, error: 'Method not allowed. Use POST for checkout.' }),
       { 
         status: 405, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
