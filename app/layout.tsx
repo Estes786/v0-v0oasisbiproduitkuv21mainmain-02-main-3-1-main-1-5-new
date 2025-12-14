@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { CookieConsent } from "@/components/analytics/CookieConsent";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,7 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
+      <head>
+        <CookieConsent />
+      </head>
       <body className={inter.className}>
+        <GoogleAnalytics />
         <Navbar />
         
         {children}
