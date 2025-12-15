@@ -2,12 +2,15 @@
 
 import Script from 'next/script';
 
-const GA_MEASUREMENT_ID = 'G-M3RKJXHLJ7';
+// Google Analytics 4 Measurement ID
+// Stream ID: 13134677006
+// Property: OASIS BI PRO (G-YVDTXND4XB)
+const GA_MEASUREMENT_ID = 'G-YVDTXND4XB';
 
 export function GoogleAnalytics() {
   return (
     <>
-      {/* Google tag (gtag.js) */}
+      {/* Google Analytics 4 (GA4) */}
       <Script
         strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
@@ -23,6 +26,7 @@ export function GoogleAnalytics() {
 
             gtag('config', '${GA_MEASUREMENT_ID}', {
               page_path: window.location.pathname,
+              send_page_view: true
             });
           `,
         }}

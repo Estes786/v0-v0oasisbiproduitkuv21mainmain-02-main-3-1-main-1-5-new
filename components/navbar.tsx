@@ -104,6 +104,12 @@ export function Navbar() {
             <Link href="/pricing" className="text-gray-700 hover:text-blue-600 transition font-medium">
               Harga
             </Link>
+            <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition font-medium">
+              Blog
+            </Link>
+            <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition font-medium">
+              Blog
+            </Link>
             <Link href="/legal/faq" className="text-gray-700 hover:text-blue-600 transition font-medium">
               FAQ
             </Link>

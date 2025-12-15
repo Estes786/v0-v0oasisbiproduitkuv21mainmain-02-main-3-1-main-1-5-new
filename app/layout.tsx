@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/GoogleTagManager";
+import { HubSpotTracking, HubSpotCookieButton } from "@/components/analytics/HubSpotTracking";
 import { CookieConsent } from "@/components/analytics/CookieConsent";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -29,9 +31,13 @@ export default function RootLayout({
     <html lang="id">
       <head>
         <CookieConsent />
+        <meta name="google-site-verification" content="ea4f1b15fc6a6551" />
       </head>
       <body className={inter.className}>
+        <GoogleTagManagerNoScript />
         <GoogleAnalytics />
+        <GoogleTagManager />
+        <HubSpotTracking />
         <Navbar />
         
         {children}
@@ -52,6 +58,7 @@ export default function RootLayout({
                   <li><a href="/platform" className="hover:text-white transition">Platform Features</a></li>
                   <li><a href="/how-it-works" className="hover:text-white transition">Cara Kerja</a></li>
                   <li><a href="/pricing" className="hover:text-white transition">Harga</a></li>
+                  <li><a href="/blog" className="hover:text-white transition">Blog & Resources</a></li>
                   <li><a href="/dashboard" className="hover:text-white transition">Dashboard</a></li>
                   <li><a href="/auth/signin" className="hover:text-white transition">Sign In</a></li>
                 </ul>
@@ -74,13 +81,20 @@ export default function RootLayout({
                 </ul>
               </div>
             </div>
-            <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-              <p className="text-gray-400 text-sm">
-                &copy; 2025 OASIS Analytics. All rights reserved.
-              </p>
-              <p className="text-gray-500 text-xs mt-2">
-                Pure Business Intelligence Platform - NOT a payment processor
-              </p>
+            <div className="border-t border-gray-800 mt-8 pt-8">
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="text-center md:text-left">
+                  <p className="text-gray-400 text-sm">
+                    &copy; 2025 OASIS Analytics. All rights reserved.
+                  </p>
+                  <p className="text-gray-500 text-xs mt-2">
+                    Pure Business Intelligence Platform - NOT a payment processor
+                  </p>
+                </div>
+                <div>
+                  <HubSpotCookieButton />
+                </div>
+              </div>
             </div>
           </div>
         </footer>

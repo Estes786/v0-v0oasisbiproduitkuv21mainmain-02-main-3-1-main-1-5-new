@@ -1,0 +1,18 @@
+# robots.txt for OASIS BI PRO
+# https://www.oasis-bi-pro.web.id
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.oasis-bi-pro.web.id/sitemap.xml
+
+# Disallow private areas
+Disallow: /api/
+Disallow: /member/
+Disallow: /admin/
+Disallow: /auth/callback
+Disallow: /payment/
+
+# Crawl delay
+Crawl-delay: 1
